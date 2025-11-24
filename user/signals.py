@@ -8,19 +8,14 @@ from .models import User, DoctorProfile, AdminProfile
 def create_user_profile(sender, instance, created, **kwargs):
     """Create a role-specific profile when a User is created.
 
-    This uses get_or_create to be idempotent and assigns sequential
-    `doctor_id`/`admin_id` from the profile primary key when missing.
+    This uses `get_or_create` to be idempotent. Profiles no longer have
+    separate `doctor_id`/`admin_id` fields; the profile primary key is
+    available as `profile.pk` if you need a numeric identifier.
     """
     if not created:
         return
 
     if instance.role == User.Role.DOCTOR:
-        profile, _ = DoctorProfile.objects.get_or_create(user=instance)
-        if not profile.doctor_id:
-            profile.doctor_id = profile.pk
-            profile.save()
+        DoctorProfile.objects.get_or_create(user=instance)
     elif instance.role == User.Role.ADMIN:
-        profile, _ = AdminProfile.objects.get_or_create(user=instance)
-        if not profile.admin_id:
-            profile.admin_id = profile.pk
-            profile.save()
+        AdminProfile.objects.get_or_create(user=instance)

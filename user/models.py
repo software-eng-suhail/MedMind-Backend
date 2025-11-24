@@ -31,7 +31,6 @@ class User(AbstractUser):
 class AdminProfile(models.Model):
 	user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='admin_profile')
 	# will be assigned from the profile PK for sequential IDs
-	admin_id = models.BigIntegerField(null=True, blank=True, unique=True)
 	created_at = models.DateTimeField(auto_now_add=True)
 
 	def __str__(self):
@@ -41,7 +40,6 @@ class AdminProfile(models.Model):
 class DoctorProfile(models.Model):
 	user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='doctor_profile')
 	# will be assigned from the profile PK for sequential IDs
-	doctor_id = models.BigIntegerField(null=True, blank=True, unique=True)
 	credits = models.IntegerField(default=1000, validators=[MinValueValidator(0)])
 	account_status = models.CharField(max_length=50, default='active')
 	changed_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name='changed_doctors')
