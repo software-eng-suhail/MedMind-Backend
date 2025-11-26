@@ -1,3 +1,5 @@
 from django.contrib import admin
+from .models import Checkup, SkinCancerCheckup
 
-# Register your models here.
+admin.site.register(Checkup)
+admin.site.register(SkinCancerCheckup)

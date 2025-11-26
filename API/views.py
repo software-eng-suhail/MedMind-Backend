@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from rest_framework import generics, permissions, viewsets
-from user.serializers import DoctorSerializer, DoctorWriteSerializer
-from user.models import User, DoctorProfile
+from user.serializers import DoctorSerializer, DoctorWriteSerializer, AdminSerializer, AdminWriteSerializer
+from user.models import User, DoctorProfile, AdminProfile
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
@@ -38,3 +38,21 @@ class DoctorViewSet(viewsets.ModelViewSet):
 			return self.get_paginated_response(serializer.data)
 		serializer = DoctorSerializer(qs, many=True)
 		return Response(serializer.data)
+
+
+class AdminViewSet(viewsets.ModelViewSet):
+	"""ViewSet to manage admin users."""
+	queryset = User.objects.filter(role=User.Role.ADMIN).select_related('admin_profile')
+	permission_classes = [permissions.AllowAny]
+
+	def get_serializer_class(self):
+		if self.action in ['create', 'update', 'partial_update']:
+			return AdminWriteSerializer
+		return AdminSerializer
+
+	def perform_destroy(self, instance):
+		try:
+			instance.admin_profile.delete()
+		except Exception:
+			pass
+		instance.delete()

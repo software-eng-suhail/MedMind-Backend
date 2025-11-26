@@ -76,3 +76,51 @@ class DoctorWriteSerializer(serializers.ModelSerializer):
         profile.save()
 
         return instance
+
+
+class AdminSerializer(serializers.ModelSerializer):
+    profile_id = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = [
+            'id',
+            'username',
+            'email',
+            'profile_id',
+            'created_at',
+        ]
+
+    def get_profile_id(self, obj):
+        profile = getattr(obj, 'admin_profile', None)
+        return getattr(profile, 'pk', None) if profile else None
+
+
+class AdminWriteSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True, required=True)
+
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'email', 'password']
+
+    def create(self, validated_data):
+        password = validated_data.pop('password')
+        validated_data['role'] = User.Role.ADMIN
+        user = User.objects.create(**validated_data)
+        user.set_password(password)
+        user.save()
+        # ensure admin profile exists
+        from user.models import AdminProfile
+        AdminProfile.objects.get_or_create(user=user)
+        return user
+
+    def update(self, instance, validated_data):
+        password = validated_data.pop('password', None)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        if password:
+            instance.set_password(password)
+        instance.save()
+        from user.models import AdminProfile
+        AdminProfile.objects.get_or_create(user=instance)
+        return instance
