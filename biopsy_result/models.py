@@ -10,7 +10,7 @@ class BiopsyResultStatus(models.TextChoices):
 class BiopsyResult(models.Model):
     checkup = models.OneToOneField(Checkup, on_delete=models.CASCADE, related_name='biopsy_results')
     result = models.TextField()
-    image = models.ImageField(upload_to='biopsy_results/')
+    document = models.FileField(upload_to='biopsy_results/')
     status = models.CharField(max_length=20, choices=BiopsyResultStatus.choices, default=BiopsyResultStatus.PENDING)
     credits_refunded = models.BooleanField(default=False)
     verified_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='biopsy_results')
