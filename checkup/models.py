@@ -19,8 +19,8 @@ class Checkup(models.Model):
     def __str__(self):
         return f"Checkup({self.pk}) Status={self.status}"
 
-class SkinCancerCheckup(models.Model):
-    checkup = models.OneToOneField(Checkup, on_delete=models.CASCADE, related_name='skin_cancer')
+class SkinCancerCheckup(Checkup):
+    # Use multi-table inheritance: SkinCancerCheckup is a Checkup subtype
     lesion_size_mm = models.FloatField()
     lesion_location = models.CharField(max_length=100)
     asymmetry = models.BooleanField()
@@ -30,4 +30,4 @@ class SkinCancerCheckup(models.Model):
     evolution = models.BooleanField()
 
     def __str__(self):
-        return f"SkinCancerCheckup({self.checkup.pk})"
+        return f"SkinCancerCheckup({self.pk})"
