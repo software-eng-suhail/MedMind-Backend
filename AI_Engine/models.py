@@ -1,5 +1,7 @@
 from django.db import models
-from checkup.models import Checkup
+from django.contrib.contenttypes.models import ContentType
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.conf import settings
 
 class AIModel(models.TextChoices):
     MODEL_A = 'Model_A', 'AI Model A'
@@ -8,12 +10,16 @@ class AIModel(models.TextChoices):
 
 
 class ImageSample(models.Model):
-    checkup = models.ForeignKey(Checkup, on_delete=models.CASCADE, related_name='image_samples')
+    # Generic relation to allow attaching samples to any concrete checkup subtype
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    content_object = GenericForeignKey('content_type', 'object_id')
+
     image = models.ImageField(upload_to='images/')
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"ImageSample({self.pk})"
+        return f"ImageSample({self.pk}) for {self.content_type}#{self.object_id}"
 
 class ImageResult(models.Model):
     image_sample = models.ForeignKey(ImageSample, on_delete=models.CASCADE, related_name='result')

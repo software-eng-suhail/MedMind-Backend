@@ -45,3 +45,14 @@ class DoctorProfile(models.Model):
 
 	def __str__(self):
 		return f"DoctorProfile({self.user.get_username()})"
+
+
+# When an AdminProfile is created, ensure the related User is marked as staff.
+@receiver(post_save, sender=AdminProfile)
+def _set_user_staff_on_adminprofile_create(sender, instance, created, **kwargs):
+	if not created:
+		return
+	user = getattr(instance, 'user', None)
+	if user and not user.is_staff:
+		user.is_staff = True
+		user.save(update_fields=['is_staff'])

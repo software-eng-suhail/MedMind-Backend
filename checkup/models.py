@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.contenttypes.fields import GenericRelation
 
 class CheckupStatus(models.TextChoices):
     PENDING = 'PENDING', 'Pending'
@@ -16,11 +17,13 @@ class Checkup(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     doctor = models.ForeignKey('user.User', on_delete=models.CASCADE, related_name='checkups')
 
+    class Meta:
+        abstract = True
+
     def __str__(self):
-        return f"Checkup({self.pk}) Status={self.status}"
+        return f"Checkup({getattr(self, 'pk', None)}) Status={self.status}"
 
 class SkinCancerCheckup(Checkup):
-    # Use multi-table inheritance: SkinCancerCheckup is a Checkup subtype
     lesion_size_mm = models.FloatField()
     lesion_location = models.CharField(max_length=100)
     asymmetry = models.BooleanField()
@@ -28,6 +31,8 @@ class SkinCancerCheckup(Checkup):
     color_variation = models.BooleanField()
     diameter_mm = models.FloatField()
     evolution = models.BooleanField()
+    # allow reverse lookup for image samples via generic relation
+    image_samples = GenericRelation('AI_Engine.ImageSample', related_query_name='checkup')
 
     def __str__(self):
         return f"SkinCancerCheckup({self.pk})"

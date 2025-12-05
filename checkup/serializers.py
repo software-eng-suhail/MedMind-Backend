@@ -1,153 +1,91 @@
 from rest_framework import serializers
+from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
 
-from .models import Checkup, SkinCancerCheckup
+from .models import SkinCancerCheckup
 from AI_Engine.models import ImageSample
+from AI_Engine.serializers import ImageSampleSerializer
+from user.serializers import DoctorSerializer
 from user.models import User
 
 
-# Constants to avoid repetition
-LESION_KEYS = {
-	"lesion_size_mm",
-	"lesion_location",
-	"asymmetry",
-	"border_irregularity",
-	"color_variation",
-	"diameter_mm",
-	"evolution",
-}
-
-PARENT_FIELDS = ("age", "gender", "blood_type", "note", "status", "doctor", "created_at")
-
-
-def _copy_parent_fields(target, source, fields):
-	for f in fields:
-		val = getattr(source, f, None)
-		if val is not None:
-			setattr(target, f, val)
-
-
-class ImageSampleInlineSerializer(serializers.ModelSerializer):
-	class Meta:
-		model = ImageSample
-		fields = ("id", "image", "uploaded_at")
-		read_only_fields = ("uploaded_at",)
-
-
 class SkinCancerCheckupSerializer(serializers.ModelSerializer):
-	class Meta:
-		model = SkinCancerCheckup
-		fields = tuple(sorted(LESION_KEYS.union({"id"})))
+    doctor = DoctorSerializer(read_only=True)
+    image_samples = ImageSampleSerializer(many=True, read_only=True)
 
-
-class CheckupSerializer(serializers.ModelSerializer):
-	image_samples = ImageSampleInlineSerializer(many=True, read_only=True)
-	skin_cancer = SkinCancerCheckupSerializer(read_only=True, source="skincancercheckup")
-
-	class Meta:
-		model = Checkup
-		fields = (
-			"id",
-			"age",
-			"gender",
-			"blood_type",
-			"note",
-			"status",
-			"created_at",
-			"doctor",
-			"image_samples",
-			"skin_cancer",
-		)
-		read_only_fields = ("created_at",)
-
-	def validate(self, data):
-		request = self.context.get("request")
-		files = []
-		if request is not None:
-			files = request.FILES.getlist("images") if hasattr(request.FILES, "getlist") else []
-		elif getattr(self, "initial_data", None):
-			files = self.initial_data.get("image_samples", [])
-
-		if files and len(files) > 5:
-			raise serializers.ValidationError("A maximum of 5 images is allowed per checkup.")
-		return data
-
-	def create(self, validated_data):
-		request = self.context.get("request")
-		files = request.FILES.getlist("images") if request and hasattr(request.FILES, "getlist") else []
-
-		checkup = Checkup.objects.create(**validated_data)
-
-		if files:
-			if len(files) > 5:
-				raise serializers.ValidationError("A maximum of 5 images is allowed per checkup.")
-			for f in files:
-				ImageSample.objects.create(checkup=checkup, image=f)
-
-		return checkup
+    class Meta:
+        model = SkinCancerCheckup
+        fields = [
+            'id',
+            'age',
+            'gender',
+            'blood_type',
+            'note',
+            'status',
+            'created_at',
+            'doctor',
+            'lesion_size_mm',
+            'lesion_location',
+            'asymmetry',
+            'border_irregularity',
+            'color_variation',
+            'diameter_mm',
+            'evolution',
+            'image_samples',
+        ]
+        read_only_fields = ['id', 'created_at', 'image_samples']
 
 
 class SkinCancerCreateSerializer(serializers.ModelSerializer):
-	"""Create or attach a SkinCancerCheckup. Supports passing an existing
-	`checkup` PK or providing inline base fields (age, gender, blood_type).
-	"""
+    # Accept doctor as a PK on write; return nested doctor on read via separate serializer
+    doctor = serializers.PrimaryKeyRelatedField(queryset=User.objects.filter(role=User.Role.DOCTOR))
+    # Accept multiple image files when creating a checkup. Use a nested serializer
+    # so the DRF browsable API can render multiple file inputs.
+    class ImageUploadSerializer(serializers.Serializer):
+        image = serializers.ImageField()
 
-	checkup = serializers.PrimaryKeyRelatedField(queryset=Checkup.objects.all(), write_only=True, required=False)
-	age = serializers.IntegerField(write_only=True, required=False)
-	gender = serializers.CharField(write_only=True, required=False)
-	blood_type = serializers.CharField(write_only=True, required=False)
-	note = serializers.CharField(write_only=True, required=False, allow_blank=True)
-	status = serializers.CharField(write_only=True, required=False)
-	doctor = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), write_only=True, required=False)
+    images = ImageUploadSerializer(many=True, write_only=True, required=False)
 
-	class Meta:
-		model = SkinCancerCheckup
-		fields = ("id", "checkup",) + tuple(k for k in ("age", "gender", "blood_type", "note", "status", "doctor")) + tuple(sorted(LESION_KEYS))
+    class Meta:
+        model = SkinCancerCheckup
+        fields = [
+            'id',
+            'age',
+            'gender',
+            'blood_type',
+            'note',
+            'status',
+            'doctor',
+            'lesion_size_mm',
+            'lesion_location',
+            'asymmetry',
+            'border_irregularity',
+            'color_variation',
+            'diameter_mm',
+            'evolution',
+            'images',
+        ]
+        read_only_fields = ['id']
 
-	def validate(self, attrs):
-		if not attrs.get("checkup"):
-			missing = [f for f in ("age", "gender", "blood_type") if f not in attrs]
-			if missing:
-				raise serializers.ValidationError({"non_field_errors": f"Missing required base checkup fields: {', '.join(missing)}"})
-		return attrs
+    def to_representation(self, instance):
+        return SkinCancerCheckupSerializer(instance, context=self.context).data
 
-	def create(self, validated_data):
-		lesion_fields = {k: validated_data.pop(k) for k in list(validated_data.keys()) if k in LESION_KEYS}
+    def validate(self, data):
+        images = data.get('images') or []
+        if len(images) > 5:
+            raise serializers.ValidationError({'images': 'A maximum of 5 images is allowed.'})
+        return data
 
-		checkup_obj = validated_data.pop("checkup", None)
+    def create(self, validated_data):
+        images = validated_data.pop('images', [])
+        with transaction.atomic():
+            instance = super().create(validated_data)
 
-		if checkup_obj:
-			if hasattr(checkup_obj, "skincancercheckup"):
-				raise serializers.ValidationError({"checkup": "This checkup already has a SkinCancerCheckup."})
+            if images:
+                ct = ContentType.objects.get_for_model(instance)
+                for img in images:
+                    # nested serializer provides {'image': <InMemoryUploadedFile>} entries
+                    image_file = img.get('image') if isinstance(img, dict) else img
+                    ImageSample.objects.create(content_type=ct, object_id=instance.pk, image=image_file)
 
-			child = SkinCancerCheckup(**lesion_fields)
-			_copy_parent_fields(child, checkup_obj, PARENT_FIELDS)
-			child.pk = checkup_obj.pk
-			child.save()
-			return child
-
-		# Inline creation of parent + child
-		checkup_fields = {f: validated_data.pop(f) for f in ("age", "gender", "blood_type", "note", "status") if f in validated_data}
-
-		doctor_obj = validated_data.pop("doctor", None)
-		request = self.context.get("request")
-		if doctor_obj:
-			checkup_fields["doctor"] = doctor_obj
-		else:
-			if request and getattr(request, "user", None) and request.user.is_authenticated:
-				checkup_fields["doctor"] = request.user
-			else:
-				raise serializers.ValidationError({"doctor": "Provide doctor id or authenticate as a doctor"})
-
-		with transaction.atomic():
-			missing = [f for f in ("age", "gender", "blood_type") if f not in checkup_fields]
-			if missing:
-				raise serializers.ValidationError({"non_field_errors": f"Missing required base checkup fields: {', '.join(missing)}"})
-
-			checkup = Checkup.objects.create(**checkup_fields)
-
-			child = SkinCancerCheckup(**lesion_fields)
-			_copy_parent_fields(child, checkup, PARENT_FIELDS)
-			child.pk = checkup.pk
-			child.save()
-			return child
+        return instance
