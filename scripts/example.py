@@ -18,8 +18,8 @@ data = {
 }
 
 files = [
-    ("images", open(r"C:/Users\Black Surface/Pictures/Screenshots/Screenshot 2024-09-07 000111.png", "rb")),
-    ("images", open(r"C:/Users\Black Surface/Pictures/Screenshots/Screenshot 2024-09-07 000111.png", "rb")),
+    ("images", open(r"example_images\WEB06875.jpg", "rb")),
+    ("images", open(r"example_images\WEB07174.jpg", "rb")),
 ]
 
 r = requests.post(url, headers=headers, data=data, files=files)
