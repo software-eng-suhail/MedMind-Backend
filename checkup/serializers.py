@@ -22,6 +22,9 @@ class SkinCancerCheckupSerializer(serializers.ModelSerializer):
             'blood_type',
             'note',
             'status',
+            'task_id',
+            'started_at',
+            'completed_at',
             'created_at',
             'doctor',
             'lesion_size_mm',
@@ -55,6 +58,7 @@ class SkinCancerCreateSerializer(serializers.ModelSerializer):
             'blood_type',
             'note',
             'status',
+            'task_id',
             'doctor',
             'lesion_size_mm',
             'lesion_location',
@@ -89,3 +93,20 @@ class SkinCancerCreateSerializer(serializers.ModelSerializer):
                     ImageSample.objects.create(content_type=ct, object_id=instance.pk, image=image_file)
 
         return instance
+
+
+class SkinCancerListSerializer(serializers.ModelSerializer):
+    doctor = DoctorSerializer(read_only=True)
+
+    class Meta:
+        model = SkinCancerCheckup
+        fields = [
+            'id',
+            'created_at',
+            'status',
+            'task_id',
+            'doctor',
+            'lesion_location',
+            'lesion_size_mm',
+        ]
+        read_only_fields = fields

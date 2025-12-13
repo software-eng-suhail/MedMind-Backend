@@ -14,6 +14,11 @@ class Checkup(models.Model):
     blood_type = models.CharField(max_length=3)
     note = models.TextField(blank=True, null=True)
     status = models.CharField(max_length=20, choices=CheckupStatus.choices, default=CheckupStatus.PENDING)
+    # Task tracking fields for asynchronous inference
+    task_id = models.CharField(max_length=255, blank=True, null=True)
+    started_at = models.DateTimeField(blank=True, null=True)
+    completed_at = models.DateTimeField(blank=True, null=True)
+    error_message = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     doctor = models.ForeignKey('user.User', on_delete=models.CASCADE, related_name='checkups')
 

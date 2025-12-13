@@ -1,0 +1,9 @@
+Django==5.2.7
+djangorestframework
+djangorestframework-simplejwt
+celery[redis]
+redis
+Pillow
+requests
+numpy
+torch

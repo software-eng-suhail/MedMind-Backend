@@ -1,7 +1,10 @@
+import os
 import requests
 
-url = "http://localhost:8000/api/skin-cancer-checkups/"
-headers = {}
+BASE = os.environ.get('API_BASE', 'http://localhost:8000')
+url = f"{BASE}/api/skin-cancer-checkups/"
+
+# Use the exact payload from the original example
 data = {
     "age": "45",
     "gender": "male",
@@ -17,11 +20,33 @@ data = {
     "evolution": "true",
 }
 
+# Optional: perform login to obtain JWT and include in Authorization header
+LOGIN = {
+    'username': os.environ.get('API_LOGIN_USER', ''),
+    'password': os.environ.get('API_LOGIN_PASS', ''),
+}
+
+headers = {}
+if LOGIN['username'] and LOGIN['password']:
+    try:
+        resp = requests.post(f"{BASE}/api/auth/login/", json=LOGIN)
+        resp.raise_for_status()
+        tok = resp.json().get('access')
+        if tok:
+            headers['Authorization'] = f'Bearer {tok}'
+            print('Authenticated; Authorization header set')
+    except Exception as e:
+        print('Login failed, proceeding unauthenticated:', e)
+
 files = [
-    ("images", open(r"example_images\WEB06875.jpg", "rb")),
-    ("images", open(r"example_images\WEB07174.jpg", "rb")),
+    ("images", open(os.path.join('example_images', 'WEB06875.jpg'), 'rb')),
+    ("images", open(os.path.join('example_images', 'WEB07174.jpg'), 'rb')),
 ]
 
-r = requests.post(url, headers=headers, data=data, files=files)
-print(r.status_code)
-print(r.text)
+with requests.Session() as s:
+    r = s.post(url, headers=headers, data=data, files=files)
+    print(r.status_code)
+    try:
+        print(r.json())
+    except Exception:
+        print(r.text)

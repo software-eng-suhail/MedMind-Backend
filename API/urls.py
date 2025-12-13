@@ -8,6 +8,8 @@ from .views import (
     ImageResultViewSet,
     BiopsyResultViewSet,
     SkinCancerCheckupViewSet,
+    DoctorSignupView,
+    DoctorLoginView,
 )
 
 router = DefaultRouter()
@@ -21,5 +23,7 @@ router.register(r'skin-cancer-checkups', SkinCancerCheckupViewSet, basename='ski
 urlpatterns = [
     path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('auth/signup/doctor/', DoctorSignupView.as_view(), name='doctor_signup'),
+    path('auth/login/', DoctorLoginView.as_view(), name='doctor_login'),
     path('', include(router.urls)),
 ]

@@ -4,8 +4,7 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 from django.conf import settings
 
 class AIModel(models.TextChoices):
-    MODEL_A = 'Model_A', 'AI Model A'
-    MODEL_B = 'Model_B', 'AI Model B'
+    EFFICIENTNET = 'Model_A', 'EfficientNet'
     MODEL_C = 'Model_C', 'AI Model C'
 
 

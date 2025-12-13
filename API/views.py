@@ -4,7 +4,10 @@ from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from django.db import transaction
 from django.conf import settings
-import os
+
+from rest_framework.views import APIView
+from django.contrib.auth import authenticate
+from rest_framework_simplejwt.tokens import RefreshToken
 
 try:
     import torch
@@ -12,65 +15,12 @@ try:
     from torchvision import transforms
 except Exception:
     torch = None
-
 from AI_Engine.models import AIModel, ImageResult
-from AI_Engine.serializers import ImageResultReadSerializer
-
-# Cached model + type ('ultralytics' or 'torch')
-_MODEL_CACHE = None
-_MODEL_TYPE = None
-
-def _load_model(path):
-    """Load model from path. Prefer ultralytics.YOLO, otherwise attempt safe torch.load.
-
-    Returns (model, model_type) where model_type is 'ultralytics' or 'torch'.
-    Raises exception if load fails.
-    """
-    global _MODEL_CACHE, _MODEL_TYPE
-    if _MODEL_CACHE is not None:
-        return _MODEL_CACHE, _MODEL_TYPE
-
-    # Try ultralytics loader first (recommended)
-    try:
-        from ultralytics import YOLO
-        m = YOLO(path)
-        _MODEL_CACHE = m
-        _MODEL_TYPE = 'ultralytics'
-        return _MODEL_CACHE, _MODEL_TYPE
-    except Exception:
-        pass
-
-    # Try torch safe globals path if torch is available
-    if torch is None:
-        raise RuntimeError('Torch is not available in this environment.')
-
-    # Attempt to allowlist ultralytics DetectionModel if ultralytics is importable
-    try:
-        import ultralytics
-        try:
-            from torch.serialization import safe_globals
-            with safe_globals([ultralytics.nn.tasks.DetectionModel]):
-                m = torch.load(path, map_location='cpu', weights_only=False)
-        except Exception:
-            # Fall back to load without safe_globals (only if trusted)
-            m = torch.load(path, map_location='cpu', weights_only=False)
-
-        try:
-            m.eval()
-        except Exception:
-            pass
-
-        _MODEL_CACHE = m
-        _MODEL_TYPE = 'torch'
-        return _MODEL_CACHE, _MODEL_TYPE
-    except Exception as exc:
-        raise RuntimeError(f'Failed to load model: {exc}')
-
 from user.serializers import DoctorSerializer, DoctorWriteSerializer, AdminSerializer, AdminWriteSerializer
 from user.models import User
 
 # app imports
-from AI_Engine.models import ImageSample, ImageResult
+from AI_Engine.models import ImageSample
 from AI_Engine.serializers import ImageSampleSerializer, ImageResultReadSerializer, ImageResultWriteSerializer
 from biopsy_result.models import BiopsyResult
 from biopsy_result.serializers import BiopsyResultSerializer
@@ -78,6 +28,7 @@ from checkup.models import SkinCancerCheckup
 from checkup.serializers import (
     SkinCancerCheckupSerializer,
     SkinCancerCreateSerializer,
+    SkinCancerListSerializer,
 )
 
 
@@ -129,6 +80,9 @@ class SkinCancerCheckupViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         if self.action == 'create':
             return SkinCancerCreateSerializer
+        if self.action == 'list':
+            return SkinCancerListSerializer
+        # detail and other actions use full serializer
         return SkinCancerCheckupSerializer
 
     def create(self, request, *args, **kwargs):
@@ -146,116 +100,145 @@ class SkinCancerCheckupViewSet(viewsets.ModelViewSet):
                 for f in files:
                     ImageSample.objects.create(content_type=ct, object_id=instance.pk, image=f)
 
+        # Enqueue inference task for the new checkup
+        from API.tasks import run_inference_for_checkup
+
+        # Ensure status is PENDING (serializer may have set it)
+        instance.status = instance.status or 'PENDING'
+        instance.save(update_fields=['status'])
+
+        try:
+            task = run_inference_for_checkup.delay(instance.pk)
+            # store the Celery task id for traceability
+            instance.task_id = task.id
+            instance.save(update_fields=['task_id'])
+            task_queued = True
+            task_error = None
+        except Exception as e:
+            # Broker or Celery may be unavailable; avoid raising 500 in the API.
+            # Record nothing for task_id and return the created object with a warning.
+            task_queued = False
+            task_error = str(e)
+
         out = SkinCancerCheckupSerializer(instance, context=self.get_serializer_context()).data
+        if not task_queued:
+            out['_task_queued'] = False
+            out['_task_error'] = task_error
         headers = self.get_success_headers(out)
         return Response(out, status=status.HTTP_201_CREATED, headers=headers)
 
-    @action(detail=True, methods=['get', 'post'], url_path='infer', permission_classes=[permissions.AllowAny])
+    @action(detail=True, methods=['post'], url_path='infer', permission_classes=[permissions.AllowAny])
     def infer(self, request, pk=None):
         """Run inference for images attached to this checkup.
 
         POST body may include `image_id` to run on a single ImageSample; otherwise all samples are processed.
         """
         checkup = self.get_object()
-        # Accept image_id from POST body or GET query params
-        if request.method == 'POST':
-            image_id = request.data.get('image_id') or request.query_params.get('image_id')
-        else:
-            image_id = request.query_params.get('image_id')
-        samples = checkup.image_samples.all()
+        image_id = request.data.get('image_id') or request.query_params.get('image_id')
+        # Enqueue background Celery task to run inference.
+        # If `image_id` was provided, run per-sample inference; otherwise run for whole checkup.
+        from API.tasks import run_inference_for_checkup, run_inference_for_sample
+
         if image_id:
-            samples = samples.filter(pk=image_id)
-
-        if not samples.exists():
-            return Response({'detail': 'No image samples found for this checkup.'}, status=status.HTTP_400_BAD_REQUEST)
-
-        model_path = getattr(settings, 'AI_MODEL_PATH', None) or os.path.join(settings.BASE_DIR, 'AI.pt')
-        try:
-            model, model_type = _load_model(model_path)
-        except Exception as exc:
-            return Response({'detail': str(exc)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-        # Preprocess for raw torch models
-        preprocess = transforms.Compose([
-            transforms.Resize((224, 224)),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-        ])
-
-        created_results = []
-        for s in samples:
+            # Validate the image belongs to this checkup
             try:
-                if model_type == 'ultralytics':
-                    # ultralytics YOLO predict API
-                    try:
-                        res = model.predict(source=s.image.path)
-                    except TypeError:
-                        # fallback to calling the model directly
-                        res = model(s.image.path)
-
-                    # Try to extract first-class and confidence from results
-                    label = None
-                    confidence = 0.0
-                    try:
-                        r0 = res[0] if hasattr(res, '__len__') else res
-                        boxes = getattr(r0, 'boxes', None)
-                        if boxes is not None and len(boxes) > 0:
-                            cls = getattr(boxes, 'cls', None)
-                            conf = getattr(boxes, 'conf', None)
-                            if cls is not None:
-                                first = cls[0]
-                                label = str(int(first.item())) if hasattr(first, 'item') else str(first)
-                            if conf is not None:
-                                firstc = conf[0]
-                                confidence = float(firstc.item()) if hasattr(firstc, 'item') else float(firstc)
-                    except Exception:
-                        pass
-
-                    result_text = label if label is not None else str(res)
-                else:
-                    # raw torch model path
-                    img = Image.open(s.image.path).convert('RGB')
-                    tensor = preprocess(img).unsqueeze(0)
-                    with torch.no_grad():
-                        out = model(tensor)
-                        if isinstance(out, torch.Tensor):
-                            probs = torch.nn.functional.softmax(out, dim=1)
-                            conf, idx = probs.max(dim=1)
-                            confidence = float(conf.item())
-                            label_idx = int(idx.item())
-                            result_text = f'label_{label_idx}'
-                        else:
-                            result_text = str(out)
-                            confidence = 0.0
-
-                # If this is a POST request, persist the ImageResult; if GET, return prediction only
-                if request.method == 'POST':
-                    ir = ImageResult.objects.create(
-                        image_sample=s,
-                        result=result_text,
-                        model=AIModel.MODEL_A,
-                        confidence=confidence,
-                    )
-                    created_results.append(ir)
-                else:
-                    created_results.append({
-                        'image_sample': s.pk,
-                        'result': result_text,
-                        'model': AIModel.MODEL_A,
-                        'confidence': confidence,
-                    })
+                sample = checkup.image_samples.get(pk=image_id)
+            except Exception:
+                return Response({'detail': 'ImageSample not found for this checkup.'}, status=status.HTTP_400_BAD_REQUEST)
+            try:
+                task = run_inference_for_sample.delay(sample.pk)
             except Exception as e:
-                created_results.append({'image_sample': s.pk, 'error': str(e)})
+                return Response({'detail': 'Failed to enqueue task', 'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        else:
+            try:
+                task = run_inference_for_checkup.delay(checkup.pk)
+            except Exception as e:
+                return Response({'detail': 'Failed to enqueue task', 'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
-        # Serialize created results
-        serialized = []
-        for r in created_results:
-            if isinstance(r, dict):
-                serialized.append(r)
-            else:
-                serialized.append(ImageResultReadSerializer(r).data)
+        # persist task id to the checkup
+        checkup.task_id = task.id
+        checkup.save(update_fields=['task_id'])
 
-        return Response({'results': serialized}, status=status.HTTP_200_OK)
+        return Response({'task_id': task.id}, status=status.HTTP_202_ACCEPTED)
+
+    @action(detail=True, methods=['get'], url_path='results', permission_classes=[permissions.AllowAny])
+    def results(self, request, pk=None):
+        """Return ImageResult rows for this checkup's images.
+
+        Optional query param `wait` (seconds) will block/poll up to that many
+        seconds for the checkup to reach `COMPLETED`. Default wait is 30s.
+        """
+        import time
+        from django.utils import timezone
+
+        checkup = self.get_object()
+        wait = int(request.query_params.get('wait', 30))
+        interval = 1
+        deadline = time.time() + max(0, wait)
+        # Poll until completed or timeout
+        while checkup.status != 'COMPLETED' and time.time() < deadline:
+            time.sleep(interval)
+            checkup.refresh_from_db()
+
+        # Gather results whether completed or timed out
+        results_qs = ImageResult.objects.filter(image_sample__content_type__model__icontains='skincancercheckup', image_sample__object_id=checkup.pk).select_related('image_sample')
+        serializer = ImageResultReadSerializer(results_qs, many=True, context=self.get_serializer_context())
+
+        if checkup.status != 'COMPLETED':
+            return Response({'status': checkup.status, 'task_id': checkup.task_id}, status=status.HTTP_202_ACCEPTED)
+
+        return Response({'status': checkup.status, 'task_id': checkup.task_id, 'results': serializer.data})
+
+
+class DoctorSignupView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        serializer = DoctorWriteSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+
+        # Create tokens
+        refresh = RefreshToken.for_user(user)
+        data = {
+            'refresh': str(refresh),
+            'access': str(refresh.access_token),
+            'doctor': DoctorSerializer(user, context={'request': request}).data,
+        }
+        return Response(data, status=status.HTTP_201_CREATED)
+
+
+class DoctorLoginView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        username = request.data.get('username') or request.data.get('email')
+        password = request.data.get('password')
+        if not username or not password:
+            return Response({'detail': 'username/email and password required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Allow login by username or email
+        user = authenticate(request, username=username, password=password)
+        if user is None:
+            # try to authenticate by email
+            try:
+                u = User.objects.get(email=username)
+            except User.DoesNotExist:
+                return Response({'detail': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+            user = authenticate(request, username=u.username, password=password)
+            if user is None:
+                return Response({'detail': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        if not user.is_doctor():
+            return Response({'detail': 'User is not a doctor'}, status=status.HTTP_403_FORBIDDEN)
+
+        refresh = RefreshToken.for_user(user)
+        data = {
+            'refresh': str(refresh),
+            'access': str(refresh.access_token),
+            'doctor': DoctorSerializer(user, context={'request': request}).data,
+        }
+        return Response(data)
 
 class ImageSampleViewSet(viewsets.ModelViewSet):
     queryset = ImageSample.objects.select_related('content_type')
