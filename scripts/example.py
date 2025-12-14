@@ -39,8 +39,8 @@ if LOGIN['username'] and LOGIN['password']:
         print('Login failed, proceeding unauthenticated:', e)
 
 files = [
-    ("images", open(os.path.join('example_images', 'WEB06875.jpg'), 'rb')),
-    ("images", open(os.path.join('example_images', 'WEB07174.jpg'), 'rb')),
+    ("images", open(os.path.join('example_images', 'B3.png'), 'rb')),
+    ("images", open(os.path.join('example_images', 'M2.png'), 'rb')),
 ]
 
 with requests.Session() as s:
@@ -50,3 +50,24 @@ with requests.Session() as s:
         print(r.json())
     except Exception:
         print(r.text)
+    # If the POST created a checkup and returned its id, fetch the results
+    try:
+        resp_json = r.json()
+    except Exception:
+        resp_json = None
+
+    if r.ok and resp_json and isinstance(resp_json, dict) and resp_json.get('id'):
+        checkup_id = resp_json.get('id')
+        results_url = f"{BASE}/api/skin-cancer-checkups/{checkup_id}/results/"
+        try:
+            rr = s.get(results_url, headers=headers)
+            print('Results GET', rr.status_code)
+            try:
+                print(rr.json())
+            except Exception:
+                print(rr.text)
+        except Exception as e:
+            print('Failed to fetch results:', e)
+    else:
+        print('No checkup id returned; skipping results fetch')
+

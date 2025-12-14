@@ -36,7 +36,8 @@ def _load_keras_model():
 def _preprocess_image(path, target_size=(224, 224)):
     img = Image.open(path).convert('RGB')
     img = img.resize(target_size)
-    arr = np.asarray(img).astype('float32') / 255.0
+    # Keep raw 0-255 scale to mirror the training pipeline (no normalization)
+    arr = np.asarray(img).astype('float32')
     arr = np.expand_dims(arr, axis=0)
     return arr
 
@@ -87,7 +88,7 @@ def run_inference_for_checkup(self, checkup_id):
         processed += 1
         try:
 
-            # Preprocess for EfficientNet (expects ~224x224, normalized to [0,1])
+            # Preprocess for EfficientNet (expects ~224x224; keep raw 0-255 scale)
             arr = _preprocess_image(s.image.path, target_size=(224, 224))
 
             # Run the single model (EfficientNet). Handle both scalar and

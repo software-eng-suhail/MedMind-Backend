@@ -1,0 +1,816 @@
+[2025-12-14 23:14:12,524: INFO/MainProcess] Connected to redis://127.0.0.1:6379/0
+[2025-12-14 23:14:12,531: INFO/MainProcess] mingle: searching for neighbors
+[2025-12-14 23:14:12,759: INFO/SpawnPoolWorker-1] child process 27176 calling self.run()
+[2025-12-14 23:14:12,795: INFO/SpawnPoolWorker-2] child process 31620 calling self.run()
+[2025-12-14 23:14:12,807: INFO/SpawnPoolWorker-3] child process 6364 calling self.run()
+[2025-12-14 23:14:12,835: INFO/SpawnPoolWorker-4] child process 6152 calling self.run()
+[2025-12-14 23:14:12,854: INFO/SpawnPoolWorker-5] child process 30716 calling self.run()
+[2025-12-14 23:14:12,881: INFO/SpawnPoolWorker-7] child process 31108 calling self.run()
+[2025-12-14 23:14:12,891: INFO/SpawnPoolWorker-6] child process 15124 calling self.run()
+[2025-12-14 23:14:12,892: INFO/SpawnPoolWorker-8] child process 15504 calling self.run()
+[2025-12-14 23:14:12,898: INFO/SpawnPoolWorker-9] child process 24404 calling self.run()
+[2025-12-14 23:14:12,943: INFO/SpawnPoolWorker-10] child process 26444 calling self.run()
+[2025-12-14 23:14:12,964: INFO/SpawnPoolWorker-11] child process 12444 calling self.run()
+[2025-12-14 23:14:12,981: INFO/SpawnPoolWorker-12] child process 26348 calling self.run()
+[2025-12-14 23:14:13,566: INFO/MainProcess] mingle: all alone
+[2025-12-14 23:14:13,597: INFO/MainProcess] celery@DESKTOP-4F1QE89 ready.
+[2025-12-14 23:23:43,095: ERROR/SpawnPoolWorker-10] Pool process <billiard.pool.Worker object at 0x000002A9FD041390> error: PermissionError(13, 'Access is denied', None, 5, None)
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\connection.py", line 347, in _recv_bytes
+    nread, err = ov.GetOverlappedResult(True)
+BrokenPipeError: [WinError 109] The pipe has been ended
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\queues.py", line 395, in get_payload
+    return self._reader.recv_bytes()
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\connection.py", line 240, in recv_bytes
+    buf = self._recv_bytes(maxlength)
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\connection.py", line 360, in _recv_bytes
+    raise EOFError
+EOFError
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 473, in receive
+    ready, req = _receive(1.0)
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 445, in _recv
+    return True, loads(get_payload())
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\queues.py", line 394, in get_payload
+    with self._rlock:
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\synchronize.py", line 118, in __exit__
+    return self._semlock.__exit__(*args)
+OSError: [WinError 6] The handle is invalid
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 351, in workloop
+    req = wait_for_job()
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 480, in receive
+    raise SystemExit(EX_FAILURE)
+SystemExit: 1
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 292, in __call__
+    sys.exit(self.workloop(pid=pid))
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 396, in workloop
+    self._ensure_messages_consumed(completed=completed)
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 406, in _ensure_messages_consumed
+    if self.on_ready_counter.value >= completed:
+  File "<string>", line 3, in getvalue
+PermissionError: [WinError 5] Access is denied
+[2025-12-14 23:23:43,095: ERROR/SpawnPoolWorker-7] Pool process <billiard.pool.Worker object at 0x000002C719961390> error: PermissionError(13, 'Access is denied', None, 5, None)
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\connection.py", line 347, in _recv_bytes
+    nread, err = ov.GetOverlappedResult(True)
+BrokenPipeError: [WinError 109] The pipe has been ended
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\queues.py", line 395, in get_payload
+    return self._reader.recv_bytes()
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\connection.py", line 240, in recv_bytes
+    buf = self._recv_bytes(maxlength)
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\connection.py", line 360, in _recv_bytes
+    raise EOFError
+EOFError
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 473, in receive
+    ready, req = _receive(1.0)
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 445, in _recv
+    return True, loads(get_payload())
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\queues.py", line 394, in get_payload
+    with self._rlock:
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\synchronize.py", line 118, in __exit__
+    return self._semlock.__exit__(*args)
+OSError: [WinError 6] The handle is invalid
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 351, in workloop
+    req = wait_for_job()
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 480, in receive
+    raise SystemExit(EX_FAILURE)
+SystemExit: 1
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 292, in __call__
+    sys.exit(self.workloop(pid=pid))
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 396, in workloop
+    self._ensure_messages_consumed(completed=completed)
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 406, in _ensure_messages_consumed
+    if self.on_ready_counter.value >= completed:
+  File "<string>", line 3, in getvalue
+PermissionError: [WinError 5] Access is denied
+[2025-12-14 23:23:43,096: ERROR/SpawnPoolWorker-6] Pool process <billiard.pool.Worker object at 0x0000012D73731390> error: OSError(9, 'The handle is invalid', None, 6, None)
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\connection.py", line 347, in _recv_bytes
+    nread, err = ov.GetOverlappedResult(True)
+BrokenPipeError: [WinError 109] The pipe has been ended
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\queues.py", line 395, in get_payload
+    return self._reader.recv_bytes()
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\connection.py", line 240, in recv_bytes
+    buf = self._recv_bytes(maxlength)
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\connection.py", line 360, in _recv_bytes
+    raise EOFError
+EOFError
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 473, in receive
+    ready, req = _receive(1.0)
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 445, in _recv
+    return True, loads(get_payload())
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\queues.py", line 394, in get_payload
+    with self._rlock:
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\synchronize.py", line 118, in __exit__
+    return self._semlock.__exit__(*args)
+OSError: [WinError 6] The handle is invalid
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 351, in workloop
+    req = wait_for_job()
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 480, in receive
+    raise SystemExit(EX_FAILURE)
+SystemExit: 1
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 292, in __call__
+    sys.exit(self.workloop(pid=pid))
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 396, in workloop
+    self._ensure_messages_consumed(completed=completed)
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 406, in _ensure_messages_consumed
+    if self.on_ready_counter.value >= completed:
+  File "<string>", line 7, in getvalue
+OSError: [WinError 6] The handle is invalid
+[2025-12-14 23:23:43,095: ERROR/SpawnPoolWorker-12] Pool process <billiard.pool.Worker object at 0x0000020906651390> error: PermissionError(13, 'Access is denied', None, 5, None)
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\connection.py", line 347, in _recv_bytes
+    nread, err = ov.GetOverlappedResult(True)
+BrokenPipeError: [WinError 109] The pipe has been ended
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\queues.py", line 395, in get_payload
+    return self._reader.recv_bytes()
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\connection.py", line 240, in recv_bytes
+    buf = self._recv_bytes(maxlength)
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\connection.py", line 360, in _recv_bytes
+    raise EOFError
+EOFError
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 473, in receive
+    ready, req = _receive(1.0)
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 445, in _recv
+    return True, loads(get_payload())
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\queues.py", line 394, in get_payload
+    with self._rlock:
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\synchronize.py", line 118, in __exit__
+    return self._semlock.__exit__(*args)
+OSError: [WinError 6] The handle is invalid
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 351, in workloop
+    req = wait_for_job()
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 480, in receive
+    raise SystemExit(EX_FAILURE)
+SystemExit: 1
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 292, in __call__
+    sys.exit(self.workloop(pid=pid))
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 396, in workloop
+    self._ensure_messages_consumed(completed=completed)
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 406, in _ensure_messages_consumed
+    if self.on_ready_counter.value >= completed:
+  File "<string>", line 3, in getvalue
+PermissionError: [WinError 5] Access is denied
+[2025-12-14 23:23:43,095: ERROR/SpawnPoolWorker-9] Pool process <billiard.pool.Worker object at 0x000001BD1B171390> error: PermissionError(13, 'Access is denied', None, 5, None)
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\connection.py", line 347, in _recv_bytes
+    nread, err = ov.GetOverlappedResult(True)
+BrokenPipeError: [WinError 109] The pipe has been ended
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\queues.py", line 395, in get_payload
+    return self._reader.recv_bytes()
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\connection.py", line 240, in recv_bytes
+    buf = self._recv_bytes(maxlength)
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\connection.py", line 360, in _recv_bytes
+    raise EOFError
+EOFError
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 473, in receive
+    ready, req = _receive(1.0)
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 445, in _recv
+    return True, loads(get_payload())
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\queues.py", line 394, in get_payload
+    with self._rlock:
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\synchronize.py", line 118, in __exit__
+    return self._semlock.__exit__(*args)
+OSError: [WinError 6] The handle is invalid
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 351, in workloop
+    req = wait_for_job()
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 480, in receive
+    raise SystemExit(EX_FAILURE)
+SystemExit: 1
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 292, in __call__
+    sys.exit(self.workloop(pid=pid))
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 396, in workloop
+    self._ensure_messages_consumed(completed=completed)
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 406, in _ensure_messages_consumed
+    if self.on_ready_counter.value >= completed:
+  File "<string>", line 3, in getvalue
+PermissionError: [WinError 5] Access is denied
+[2025-12-14 23:23:43,095: ERROR/SpawnPoolWorker-8] Pool process <billiard.pool.Worker object at 0x000001D9C1F61390> error: PermissionError(13, 'Access is denied', None, 5, None)
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\connection.py", line 347, in _recv_bytes
+    nread, err = ov.GetOverlappedResult(True)
+BrokenPipeError: [WinError 109] The pipe has been ended
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\queues.py", line 395, in get_payload
+    return self._reader.recv_bytes()
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\connection.py", line 240, in recv_bytes
+    buf = self._recv_bytes(maxlength)
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\connection.py", line 360, in _recv_bytes
+    raise EOFError
+EOFError
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 473, in receive
+    ready, req = _receive(1.0)
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 445, in _recv
+    return True, loads(get_payload())
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\queues.py", line 394, in get_payload
+    with self._rlock:
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\synchronize.py", line 118, in __exit__
+    return self._semlock.__exit__(*args)
+OSError: [WinError 6] The handle is invalid
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 351, in workloop
+    req = wait_for_job()
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 480, in receive
+    raise SystemExit(EX_FAILURE)
+SystemExit: 1
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 292, in __call__
+    sys.exit(self.workloop(pid=pid))
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 396, in workloop
+    self._ensure_messages_consumed(completed=completed)
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 406, in _ensure_messages_consumed
+    if self.on_ready_counter.value >= completed:
+  File "<string>", line 3, in getvalue
+PermissionError: [WinError 5] Access is denied
+[2025-12-14 23:23:43,095: ERROR/SpawnPoolWorker-9] Pool process <billiard.pool.Worker object at 0x000001BD1B171390> error: PermissionError(13, 'Access is denied', None, 5, None)
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\connection.py", line 347, in _recv_bytes
+    nread, err = ov.GetOverlappedResult(True)
+BrokenPipeError: [WinError 109] The pipe has been ended
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\queues.py", line 395, in get_payload
+    return self._reader.recv_bytes()
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\connection.py", line 240, in recv_bytes
+    buf = self._recv_bytes(maxlength)
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\connection.py", line 360, in _recv_bytes
+    raise EOFError
+EOFError
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 473, in receive
+    ready, req = _receive(1.0)
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 445, in _recv
+    return True, loads(get_payload())
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\queues.py", line 394, in get_payload
+    with self._rlock:
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\synchronize.py", line 118, in __exit__
+    return self._semlock.__exit__(*args)
+OSError: [WinError 6] The handle is invalid
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 351, in workloop
+    req = wait_for_job()
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 480, in receive
+    raise SystemExit(EX_FAILURE)
+SystemExit: 1
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 292, in __call__
+    sys.exit(self.workloop(pid=pid))
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 396, in workloop
+    self._ensure_messages_consumed(completed=completed)
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 406, in _ensure_messages_consumed
+    if self.on_ready_counter.value >= completed:
+  File "<string>", line 3, in getvalue
+PermissionError: [WinError 5] Access is denied
+[2025-12-14 23:23:43,095: ERROR/SpawnPoolWorker-10] Pool process <billiard.pool.Worker object at 0x000002A9FD041390> error: PermissionError(13, 'Access is denied', None, 5, None)
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\connection.py", line 347, in _recv_bytes
+    nread, err = ov.GetOverlappedResult(True)
+BrokenPipeError: [WinError 109] The pipe has been ended
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\queues.py", line 395, in get_payload
+    return self._reader.recv_bytes()
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\connection.py", line 240, in recv_bytes
+    buf = self._recv_bytes(maxlength)
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\connection.py", line 360, in _recv_bytes
+    raise EOFError
+EOFError
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 473, in receive
+    ready, req = _receive(1.0)
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 445, in _recv
+    return True, loads(get_payload())
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\queues.py", line 394, in get_payload
+    with self._rlock:
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\synchronize.py", line 118, in __exit__
+    return self._semlock.__exit__(*args)
+OSError: [WinError 6] The handle is invalid
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 351, in workloop
+    req = wait_for_job()
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 480, in receive
+    raise SystemExit(EX_FAILURE)
+SystemExit: 1
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 292, in __call__
+    sys.exit(self.workloop(pid=pid))
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 396, in workloop
+    self._ensure_messages_consumed(completed=completed)
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 406, in _ensure_messages_consumed
+    if self.on_ready_counter.value >= completed:
+  File "<string>", line 3, in getvalue
+PermissionError: [WinError 5] Access is denied
+[2025-12-14 23:23:43,096: ERROR/SpawnPoolWorker-6] Pool process <billiard.pool.Worker object at 0x0000012D73731390> error: OSError(9, 'The handle is invalid', None, 6, None)
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\connection.py", line 347, in _recv_bytes
+    nread, err = ov.GetOverlappedResult(True)
+BrokenPipeError: [WinError 109] The pipe has been ended
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\queues.py", line 395, in get_payload
+    return self._reader.recv_bytes()
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\connection.py", line 240, in recv_bytes
+    buf = self._recv_bytes(maxlength)
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\connection.py", line 360, in _recv_bytes
+    raise EOFError
+EOFError
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 473, in receive
+    ready, req = _receive(1.0)
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 445, in _recv
+    return True, loads(get_payload())
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\queues.py", line 394, in get_payload
+    with self._rlock:
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\synchronize.py", line 118, in __exit__
+    return self._semlock.__exit__(*args)
+OSError: [WinError 6] The handle is invalid
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 351, in workloop
+    req = wait_for_job()
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 480, in receive
+    raise SystemExit(EX_FAILURE)
+SystemExit: 1
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 292, in __call__
+    sys.exit(self.workloop(pid=pid))
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 396, in workloop
+    self._ensure_messages_consumed(completed=completed)
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 406, in _ensure_messages_consumed
+    if self.on_ready_counter.value >= completed:
+  File "<string>", line 7, in getvalue
+OSError: [WinError 6] The handle is invalid
+[2025-12-14 23:23:43,095: ERROR/SpawnPoolWorker-12] Pool process <billiard.pool.Worker object at 0x0000020906651390> error: PermissionError(13, 'Access is denied', None, 5, None)
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\connection.py", line 347, in _recv_bytes
+    nread, err = ov.GetOverlappedResult(True)
+BrokenPipeError: [WinError 109] The pipe has been ended
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\queues.py", line 395, in get_payload
+    return self._reader.recv_bytes()
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\connection.py", line 240, in recv_bytes
+    buf = self._recv_bytes(maxlength)
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\connection.py", line 360, in _recv_bytes
+    raise EOFError
+EOFError
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 473, in receive
+    ready, req = _receive(1.0)
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 445, in _recv
+    return True, loads(get_payload())
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\queues.py", line 394, in get_payload
+    with self._rlock:
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\synchronize.py", line 118, in __exit__
+    return self._semlock.__exit__(*args)
+OSError: [WinError 6] The handle is invalid
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 351, in workloop
+    req = wait_for_job()
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 480, in receive
+    raise SystemExit(EX_FAILURE)
+SystemExit: 1
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 292, in __call__
+    sys.exit(self.workloop(pid=pid))
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 396, in workloop
+    self._ensure_messages_consumed(completed=completed)
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 406, in _ensure_messages_consumed
+    if self.on_ready_counter.value >= completed:
+  File "<string>", line 3, in getvalue
+PermissionError: [WinError 5] Access is denied
+[2025-12-14 23:23:43,095: ERROR/SpawnPoolWorker-7] Pool process <billiard.pool.Worker object at 0x000002C719961390> error: PermissionError(13, 'Access is denied', None, 5, None)
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\connection.py", line 347, in _recv_bytes
+    nread, err = ov.GetOverlappedResult(True)
+BrokenPipeError: [WinError 109] The pipe has been ended
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\queues.py", line 395, in get_payload
+    return self._reader.recv_bytes()
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\connection.py", line 240, in recv_bytes
+    buf = self._recv_bytes(maxlength)
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\connection.py", line 360, in _recv_bytes
+    raise EOFError
+EOFError
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 473, in receive
+    ready, req = _receive(1.0)
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 445, in _recv
+    return True, loads(get_payload())
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\queues.py", line 394, in get_payload
+    with self._rlock:
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\synchronize.py", line 118, in __exit__
+    return self._semlock.__exit__(*args)
+OSError: [WinError 6] The handle is invalid
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 351, in workloop
+    req = wait_for_job()
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 480, in receive
+    raise SystemExit(EX_FAILURE)
+SystemExit: 1
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 292, in __call__
+    sys.exit(self.workloop(pid=pid))
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 396, in workloop
+    self._ensure_messages_consumed(completed=completed)
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 406, in _ensure_messages_consumed
+    if self.on_ready_counter.value >= completed:
+  File "<string>", line 3, in getvalue
+PermissionError: [WinError 5] Access is denied
+[2025-12-14 23:23:43,095: ERROR/SpawnPoolWorker-8] Pool process <billiard.pool.Worker object at 0x000001D9C1F61390> error: PermissionError(13, 'Access is denied', None, 5, None)
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\connection.py", line 347, in _recv_bytes
+    nread, err = ov.GetOverlappedResult(True)
+BrokenPipeError: [WinError 109] The pipe has been ended
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\queues.py", line 395, in get_payload
+    return self._reader.recv_bytes()
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\connection.py", line 240, in recv_bytes
+    buf = self._recv_bytes(maxlength)
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\connection.py", line 360, in _recv_bytes
+    raise EOFError
+EOFError
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 473, in receive
+    ready, req = _receive(1.0)
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 445, in _recv
+    return True, loads(get_payload())
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\queues.py", line 394, in get_payload
+    with self._rlock:
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\synchronize.py", line 118, in __exit__
+    return self._semlock.__exit__(*args)
+OSError: [WinError 6] The handle is invalid
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 351, in workloop
+    req = wait_for_job()
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 480, in receive
+    raise SystemExit(EX_FAILURE)
+SystemExit: 1
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 292, in __call__
+    sys.exit(self.workloop(pid=pid))
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 396, in workloop
+    self._ensure_messages_consumed(completed=completed)
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 406, in _ensure_messages_consumed
+    if self.on_ready_counter.value >= completed:
+  File "<string>", line 3, in getvalue
+PermissionError: [WinError 5] Access is denied
+[2025-12-14 23:24:12,455: ERROR/SpawnPoolWorker-4] Pool process <billiard.pool.Worker object at 0x00000235D9B61390> error: OSError(9, 'The handle is invalid', None, 6, None)
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\connection.py", line 347, in _recv_bytes
+    nread, err = ov.GetOverlappedResult(True)
+BrokenPipeError: [WinError 109] The pipe has been ended
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\queues.py", line 395, in get_payload
+    return self._reader.recv_bytes()
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\connection.py", line 240, in recv_bytes
+    buf = self._recv_bytes(maxlength)
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\connection.py", line 360, in _recv_bytes
+    raise EOFError
+EOFError
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 473, in receive
+    ready, req = _receive(1.0)
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 445, in _recv
+    return True, loads(get_payload())
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\queues.py", line 394, in get_payload
+    with self._rlock:
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\synchronize.py", line 118, in __exit__
+    return self._semlock.__exit__(*args)
+OSError: [WinError 6] The handle is invalid
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 351, in workloop
+    req = wait_for_job()
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 480, in receive
+    raise SystemExit(EX_FAILURE)
+SystemExit: 1
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 292, in __call__
+    sys.exit(self.workloop(pid=pid))
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 396, in workloop
+    self._ensure_messages_consumed(completed=completed)
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 406, in _ensure_messages_consumed
+    if self.on_ready_counter.value >= completed:
+  File "<string>", line 7, in getvalue
+OSError: [WinError 6] The handle is invalid
+[2025-12-14 23:24:12,455: ERROR/SpawnPoolWorker-4] Pool process <billiard.pool.Worker object at 0x00000235D9B61390> error: OSError(9, 'The handle is invalid', None, 6, None)
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\connection.py", line 347, in _recv_bytes
+    nread, err = ov.GetOverlappedResult(True)
+BrokenPipeError: [WinError 109] The pipe has been ended
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\queues.py", line 395, in get_payload
+    return self._reader.recv_bytes()
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\connection.py", line 240, in recv_bytes
+    buf = self._recv_bytes(maxlength)
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\connection.py", line 360, in _recv_bytes
+    raise EOFError
+EOFError
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 473, in receive
+    ready, req = _receive(1.0)
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 445, in _recv
+    return True, loads(get_payload())
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\queues.py", line 394, in get_payload
+    with self._rlock:
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\synchronize.py", line 118, in __exit__
+    return self._semlock.__exit__(*args)
+OSError: [WinError 6] The handle is invalid
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 351, in workloop
+    req = wait_for_job()
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 480, in receive
+    raise SystemExit(EX_FAILURE)
+SystemExit: 1
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 292, in __call__
+    sys.exit(self.workloop(pid=pid))
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 396, in workloop
+    self._ensure_messages_consumed(completed=completed)
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 406, in _ensure_messages_consumed
+    if self.on_ready_counter.value >= completed:
+  File "<string>", line 7, in getvalue
+OSError: [WinError 6] The handle is invalid
+[2025-12-14 23:24:12,578: ERROR/SpawnPoolWorker-11] Pool process <billiard.pool.Worker object at 0x000001F16ADE1390> error: OSError(9, 'The handle is invalid', None, 6, None)
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\connection.py", line 347, in _recv_bytes
+    nread, err = ov.GetOverlappedResult(True)
+BrokenPipeError: [WinError 109] The pipe has been ended
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\queues.py", line 395, in get_payload
+    return self._reader.recv_bytes()
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\connection.py", line 240, in recv_bytes
+    buf = self._recv_bytes(maxlength)
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\connection.py", line 360, in _recv_bytes
+    raise EOFError
+EOFError
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 473, in receive
+    ready, req = _receive(1.0)
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 445, in _recv
+    return True, loads(get_payload())
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\queues.py", line 394, in get_payload
+    with self._rlock:
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\synchronize.py", line 118, in __exit__
+    return self._semlock.__exit__(*args)
+OSError: [WinError 6] The handle is invalid
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 351, in workloop
+    req = wait_for_job()
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 480, in receive
+    raise SystemExit(EX_FAILURE)
+SystemExit: 1
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 292, in __call__
+    sys.exit(self.workloop(pid=pid))
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 396, in workloop
+    self._ensure_messages_consumed(completed=completed)
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 406, in _ensure_messages_consumed
+    if self.on_ready_counter.value >= completed:
+  File "<string>", line 7, in getvalue
+OSError: [WinError 6] The handle is invalid
+[2025-12-14 23:24:12,578: ERROR/SpawnPoolWorker-11] Pool process <billiard.pool.Worker object at 0x000001F16ADE1390> error: OSError(9, 'The handle is invalid', None, 6, None)
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\connection.py", line 347, in _recv_bytes
+    nread, err = ov.GetOverlappedResult(True)
+BrokenPipeError: [WinError 109] The pipe has been ended
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\queues.py", line 395, in get_payload
+    return self._reader.recv_bytes()
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\connection.py", line 240, in recv_bytes
+    buf = self._recv_bytes(maxlength)
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\connection.py", line 360, in _recv_bytes
+    raise EOFError
+EOFError
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 473, in receive
+    ready, req = _receive(1.0)
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 445, in _recv
+    return True, loads(get_payload())
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\queues.py", line 394, in get_payload
+    with self._rlock:
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\synchronize.py", line 118, in __exit__
+    return self._semlock.__exit__(*args)
+OSError: [WinError 6] The handle is invalid
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 351, in workloop
+    req = wait_for_job()
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 480, in receive
+    raise SystemExit(EX_FAILURE)
+SystemExit: 1
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 292, in __call__
+    sys.exit(self.workloop(pid=pid))
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 396, in workloop
+    self._ensure_messages_consumed(completed=completed)
+  File "C:\Users\Black Surface\Desktop\MedMind-Backend\ML\lib\site-packages\billiard\pool.py", line 406, in _ensure_messages_consumed
+    if self.on_ready_counter.value >= completed:
+  File "<string>", line 7, in getvalue
+OSError: [WinError 6] The handle is invalid
