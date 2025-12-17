@@ -175,6 +175,23 @@ class SkinCancerCheckupViewSet(viewsets.ModelViewSet):
         wait = int(request.query_params.get('wait', 30))
         interval = 1
         deadline = time.time() + max(0, wait)
+
+        # If the checkup is still pending but the previously queued task has failed, re-enqueue inference.
+        if checkup.status == 'PENDING' and checkup.task_id:
+            try:
+                from celery.result import AsyncResult
+                from API.tasks import run_inference_for_checkup
+
+                task_state = AsyncResult(checkup.task_id).state
+                if task_state in ('FAILURE', 'REVOKED'):
+                    new_task = run_inference_for_checkup.delay(checkup.pk)
+                    checkup.task_id = new_task.id
+                    checkup.status = 'PENDING'
+                    checkup.save(update_fields=['task_id', 'status'])
+            except Exception:
+                # If we cannot check or requeue, proceed with normal polling.
+                pass
+
         # Poll until completed or timeout
         while checkup.status != 'COMPLETED' and time.time() < deadline:
             time.sleep(interval)

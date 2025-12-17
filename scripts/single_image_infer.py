@@ -84,23 +84,7 @@ def main() -> None:
 
     print("Loading model...")
     # Use compile=False to avoid optimizer/loss deserialization issues; also allow DepthwiseConv2D shim if needed.
-    try:
-        from tensorflow.keras.layers import DepthwiseConv2D as TFDepthwiseConv2D
-
-        def DepthwiseConv2D_factory(config):
-            cfg = dict(config or {})
-            cfg.pop("groups", None)
-            # Keras 3 may pass dtype/activation etc.; ensure keys match TFDepthwiseConv2D signature
-            return TFDepthwiseConv2D.from_config(cfg)
-
-        model = keras.models.load_model(
-            str(model_path),
-            compile=False,
-            custom_objects={"DepthwiseConv2D": DepthwiseConv2D_factory},
-        )
-    except Exception:
-        # Fallback without shim
-        model = keras.models.load_model(str(model_path), compile=False)
+    model = keras.models.load_model(str(model_path), compile=False)
 
     print("Loading image...")
     input_shape = (224, 224, 3)

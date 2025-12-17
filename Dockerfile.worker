@@ -1,0 +1,17 @@
+FROM python:3.10-slim
+
+WORKDIR /app
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends build-essential libgl1 curl \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt ./
+COPY requirements.docker.txt ./
+RUN pip install --no-cache-dir -r requirements.txt -r requirements.docker.txt
+
+COPY . .
+
+ENV MODEL_DIR=/app/models
+
+CMD ["celery", "-A", "MedMind_Backend", "worker", "-l", "info", "-P", "solo"]

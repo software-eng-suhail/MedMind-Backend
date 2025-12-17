@@ -9,7 +9,7 @@ class AIModel(models.TextChoices):
 
 
 class ImageSample(models.Model):
-    # Generic relation to allow attaching samples to any concrete checkup subtype
+    # Generic relation to allow attaching samples to any checkup subtype
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey('content_type', 'object_id')

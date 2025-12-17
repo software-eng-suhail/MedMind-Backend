@@ -1,0 +1,39 @@
+services:
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: bash -c "python manage.py migrate --no-input && python manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - ./:/app:rw
+      - ./models:/app/models:ro
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    volumes:
+      - ./:/app:rw
+      - ./models:/app/models:ro
+    env_file:
+      - .env
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+volumes:
+  redisdata:

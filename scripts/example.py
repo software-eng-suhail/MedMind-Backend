@@ -50,6 +50,7 @@ with requests.Session() as s:
         print(r.json())
     except Exception:
         print(r.text)
+        
     # If the POST created a checkup and returned its id, fetch the results
     try:
         resp_json = r.json()
