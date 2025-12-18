@@ -1,20 +1,23 @@
 from rest_framework import serializers
 from user.models import User
-from user.models import DoctorProfile
+from user.models import DoctorProfile, DoctorAccountStatus
 
 
 class DoctorSerializer(serializers.ModelSerializer):
     credits = serializers.SerializerMethodField()
     account_status = serializers.SerializerMethodField()
+    profile_picture = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = [
             'id',
+            'name',
             'username',
             'email',
             'credits',
             'account_status',
+            'profile_picture',
             'created_at',
         ]
 
@@ -26,20 +29,36 @@ class DoctorSerializer(serializers.ModelSerializer):
         profile = getattr(obj, 'doctor_profile', None)
         return getattr(profile, 'account_status', None) if profile else None
 
+    def get_profile_picture(self, obj):
+        profile = getattr(obj, 'doctor_profile', None)
+        pic = getattr(profile, 'profile_picture', None) if profile else None
+        if not pic:
+            return None
+        request = self.context.get('request') if hasattr(self, 'context') else None
+        try:
+            url = pic.url
+            if request is not None:
+                return request.build_absolute_uri(url)
+            return url
+        except Exception:
+            return None
+
 
 class DoctorWriteSerializer(serializers.ModelSerializer):
-    # write serializer for creating/updating doctor users
     password = serializers.CharField(write_only=True, required=True)
     credits = serializers.IntegerField(write_only=True, required=False)
-    account_status = serializers.CharField(write_only=True, required=False)
+    account_status = serializers.ChoiceField(choices=DoctorAccountStatus.choices, required=False)
+    profile_picture = serializers.ImageField(write_only=False, required=False, allow_null=True)
+    name = serializers.CharField(required=False, allow_blank=True)
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'password', 'credits', 'account_status']
+        fields = ['id', 'name', 'username', 'email', 'password', 'credits', 'account_status', 'profile_picture']
 
     def create(self, validated_data):
         credits = validated_data.pop('credits', None)
-        account_status = validated_data.pop('account_status', 'active')
+        account_status = validated_data.pop('account_status', DoctorAccountStatus.ACTIVE)
+        profile_picture = validated_data.pop('profile_picture', None)
         password = validated_data.pop('password')
         # enforce doctor role
         validated_data['role'] = User.Role.DOCTOR
@@ -51,6 +70,8 @@ class DoctorWriteSerializer(serializers.ModelSerializer):
         if credits is not None:
             profile.credits = credits
         profile.account_status = account_status
+        if profile_picture is not None:
+            profile.profile_picture = profile_picture
         profile.save()
         return user
 
@@ -59,6 +80,7 @@ class DoctorWriteSerializer(serializers.ModelSerializer):
         password = validated_data.pop('password', None)
         credits = validated_data.pop('credits', None)
         account_status = validated_data.pop('account_status', None)
+        profile_picture = validated_data.pop('profile_picture', None)
 
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
@@ -73,6 +95,8 @@ class DoctorWriteSerializer(serializers.ModelSerializer):
             profile.credits = credits
         if account_status is not None:
             profile.account_status = account_status
+        if profile_picture is not None:
+            profile.profile_picture = profile_picture
         profile.save()
 
         return instance
@@ -85,6 +109,7 @@ class AdminSerializer(serializers.ModelSerializer):
         model = User
         fields = [
             'id',
+            'name',
             'username',
             'email',
             'profile_id',
@@ -98,10 +123,11 @@ class AdminSerializer(serializers.ModelSerializer):
 
 class AdminWriteSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True)
+    name = serializers.CharField(required=False, allow_blank=True)
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'password']
+        fields = ['id', 'name', 'username', 'email', 'password']
 
     def create(self, validated_data):
         password = validated_data.pop('password')

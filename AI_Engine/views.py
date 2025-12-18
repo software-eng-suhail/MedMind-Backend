@@ -1,3 +1,1 @@
-from django.shortcuts import render
-
-# Create your views here.
+"""Views for AI_Engine (none currently)."""

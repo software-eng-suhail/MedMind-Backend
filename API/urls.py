@@ -1,15 +1,17 @@
-from rest_framework_simplejwt.views import TokenObtainPairView,TokenRefreshView
-from django.urls import path, include
+from django.urls import include, path
 from rest_framework.routers import DefaultRouter
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+
 from .views import (
-    DoctorViewSet,
     AdminViewSet,
-    ImageSampleViewSet,
-    ImageResultViewSet,
     BiopsyResultViewSet,
-    SkinCancerCheckupViewSet,
-    DoctorSignupView,
     DoctorLoginView,
+    DoctorSignupView,
+    DoctorViewSet,
+    HealthCheckView,
+    ImageResultViewSet,
+    ImageSampleViewSet,
+    SkinCancerCheckupViewSet,
 )
 
 router = DefaultRouter()
@@ -25,5 +27,6 @@ urlpatterns = [
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('auth/signup/doctor/', DoctorSignupView.as_view(), name='doctor_signup'),
     path('auth/login/', DoctorLoginView.as_view(), name='doctor_login'),
+    path('healthz/', HealthCheckView.as_view(), name='healthz'),
     path('', include(router.urls)),
 ]

@@ -56,7 +56,9 @@ def kmeans_mask(image: np.ndarray) -> np.ndarray:
     return lesion_mask
 
 
-def kmeans_segmentation(image: np.ndarray, force_copy: bool = True, mask: np.ndarray | None = None) -> np.ndarray:
+def kmeans_segmentation(
+    image: np.ndarray, force_copy: bool = True, mask: np.ndarray | None = None
+) -> np.ndarray:
     lesion_mask = mask if mask is not None else kmeans_mask(image)
     segmented_img = image.reshape((-1, 3))
     if force_copy and segmented_img.base is image:
@@ -68,9 +70,17 @@ def kmeans_segmentation(image: np.ndarray, force_copy: bool = True, mask: np.nda
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--image", required=True, help="Image to evaluate", type=str)
-    parser.add_argument("--model", required=True, help="Model (.h5) to use for classification", type=str)
-    parser.add_argument("--segment", action="store_true", help="Segment the image before classification")
-    parser.add_argument("--remove-artifacts", action="store_true", help="Apply morphological closing before classification")
+    parser.add_argument(
+        "--model", required=True, help="Model (.h5) to use for classification", type=str
+    )
+    parser.add_argument(
+        "--segment", action="store_true", help="Segment the image before classification"
+    )
+    parser.add_argument(
+        "--remove-artifacts",
+        action="store_true",
+        help="Apply morphological closing before classification",
+    )
     args = parser.parse_args()
 
     image_path = Path(args.image)
@@ -107,7 +117,7 @@ def main() -> None:
     model_input = [batch] * num_inputs if num_inputs > 1 else batch
 
     prediction = float(np.ravel(model.predict(model_input))[0])
-    label = 'Benign' if prediction < 0.5 else 'Malignant'
+    label = "Benign" if prediction < 0.5 else "Malignant"
     print(f"{label} (malignant probability: {prediction:.2%})")
 
 

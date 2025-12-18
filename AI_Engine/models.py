@@ -1,7 +1,6 @@
-from django.db import models
-from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericForeignKey
-from django.conf import settings
+from django.contrib.contenttypes.models import ContentType
+from django.db import models
 
 class AIModel(models.TextChoices):
     EFFICIENTNET = 'Model_A', 'EfficientNet'
@@ -25,7 +24,7 @@ class ImageResult(models.Model):
     result = models.TextField()
     model = models.CharField(max_length=100, choices=AIModel.choices)
     confidence = models.FloatField()
-    xai_image = models.ImageField(upload_to='xai_images/')
+    xai_image = models.ImageField(upload_to='xai_images/', blank=True, null=True)
     
     def __str__(self):
         return f"ImageResult({self.pk}) {self.model} conf={self.confidence}"

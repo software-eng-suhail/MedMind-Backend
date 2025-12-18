@@ -1,6 +1,7 @@
-from rest_framework import serializers
 from django.contrib.contenttypes.models import ContentType
-from .models import ImageSample, ImageResult
+from rest_framework import serializers
+
+from .models import ImageResult, ImageSample
 
 
 class ImageResultReadSerializer(serializers.ModelSerializer):

@@ -39,7 +39,7 @@ class SkinCancerCheckupSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'created_at', 'image_samples']
 
 
-class SkinCancerCreateSerializer(serializers.ModelSerializer):
+class SkinCancerCheckupCreateSerializer(serializers.ModelSerializer):
     # Accept doctor as a PK on write; return nested doctor on read via separate serializer
     doctor = serializers.PrimaryKeyRelatedField(queryset=User.objects.filter(role=User.Role.DOCTOR))
     # Accept multiple image files when creating a checkup. Use a nested serializer
@@ -95,7 +95,7 @@ class SkinCancerCreateSerializer(serializers.ModelSerializer):
         return instance
 
 
-class SkinCancerListSerializer(serializers.ModelSerializer):
+class SkinCancerCheckupListSerializer(serializers.ModelSerializer):
     doctor = DoctorSerializer(read_only=True)
 
     class Meta:

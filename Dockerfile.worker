@@ -1,14 +1,19 @@
 FROM python:3.10-slim
+# syntax=docker/dockerfile:1.6
 
 WORKDIR /app
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends build-essential libgl1 curl \
+    && apt-get install -y --no-install-recommends libgl1 \
     && rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt ./
+COPY requirements.worker-tf.txt ./
+COPY requirements.worker.txt ./
 COPY requirements.docker.txt ./
-RUN pip install --no-cache-dir -r requirements.txt -r requirements.docker.txt
+
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install -r requirements.worker-tf.txt \
+    && pip install -r requirements.worker.txt -r requirements.docker.txt
 
 COPY . .
 

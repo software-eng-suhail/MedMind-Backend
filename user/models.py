@@ -5,6 +5,12 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.core.validators import MinValueValidator
 
+class DoctorAccountStatus(models.TextChoices):
+	ACTIVE = 'ACTIVE', 'Active'
+	LOGGED_OUT = 'LOGGED_OUT', 'Logged Out'
+	SUSPENDED = 'SUSPENDED', 'Suspended'
+	NOT_VERIFIED = 'NOT_VERIFIED', 'Not Verified'
+
 
 class User(AbstractUser):
 	class Role(models.TextChoices):
@@ -14,6 +20,7 @@ class User(AbstractUser):
 
 	# override email to ensure uniqueness for doctor registration flows
 	email = models.EmailField('email address', unique=True)
+	name = models.CharField(max_length=150)
 
 	role = models.CharField(max_length=20, choices=Role.choices, default=Role.PATIENT)
 	created_at = models.DateTimeField(auto_now_add=True)
@@ -39,7 +46,13 @@ class AdminProfile(models.Model):
 class DoctorProfile(models.Model):
 	user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='doctor_profile')
 	credits = models.IntegerField(default=1000, validators=[MinValueValidator(0)])
-	account_status = models.CharField(max_length=50, default='active')
+
+	account_status = models.CharField(
+		max_length=20,
+		choices=DoctorAccountStatus.choices,
+		default=DoctorAccountStatus.NOT_VERIFIED,
+	)
+	profile_picture = models.ImageField(upload_to='profiles/', blank=True, null=True)
 	changed_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name='changed_doctors')
 	created_at = models.DateTimeField(auto_now_add=True)
 

@@ -10,8 +10,8 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
-from pathlib import Path
 import os
+from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -21,12 +21,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-tgh$8yv!sa7epy!@qi)3-%c@btrkw@_x#*z0_f0k+i$nbj&#@8'
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-tgh$8yv!sa7epy!@qi)3-%c@btrkw@_x#*z0_f0k+i$nbj&#@8')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DJANGO_DEBUG', 'True').lower() in ['1', 'true', 'yes']
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS_ENV = os.environ.get('DJANGO_ALLOWED_HOSTS')
+ALLOWED_HOSTS = [h.strip() for h in ALLOWED_HOSTS_ENV.split(',')] if ALLOWED_HOSTS_ENV else []
 
 
 # Application definition
@@ -38,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'corsheaders',
     'rest_framework',
     'checkup',
     'biopsy_result',
@@ -45,10 +47,11 @@ INSTALLED_APPS = [
     'AI_Engine',
     'rest_framework_simplejwt',
     'user',
-    ]
+]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -143,6 +146,17 @@ AUTH_USER_MODEL = 'user.User'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
+# CORS/CSRF configuration
+ENV_CORS_ORIGINS = os.environ.get('CORS_ALLOWED_ORIGINS')
+CORS_ALLOWED_ORIGINS = [o.strip() for o in ENV_CORS_ORIGINS.split(',')] if ENV_CORS_ORIGINS else []
+CORS_ALLOW_CREDENTIALS = True
+
+ENV_CSRF_TRUSTED = os.environ.get('CSRF_TRUSTED_ORIGINS')
+CSRF_TRUSTED_ORIGINS = [o.strip() for o in ENV_CSRF_TRUSTED.split(',')] if ENV_CSRF_TRUSTED else []
+SESSION_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_SAMESITE = 'Lax'
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
 # Celery configuration
 # Use Redis as broker and backend for task results in development.
 CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'redis://127.0.0.1:6379/0')
@@ -151,3 +165,4 @@ CELERY_RESULT_BACKEND = os.environ.get('CELERY_RESULT_BACKEND', 'redis://127.0.0
 CELERY_TASK_ALWAYS_EAGER = False
 CELERY_TASK_EAGER_PROPAGATES = False
 CELERY_TIMEZONE = TIME_ZONE
+CELERY_TASK_MAX_RETRIES = int(os.environ.get('CELERY_TASK_MAX_RETRIES', '3'))

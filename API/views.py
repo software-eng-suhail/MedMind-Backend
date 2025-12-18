@@ -1,35 +1,43 @@
-from rest_framework import permissions, viewsets, serializers, status
-from rest_framework.decorators import action
-from rest_framework.response import Response
-from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
-from django.db import transaction
-from django.conf import settings
+import time
 
-from rest_framework.views import APIView
 from django.contrib.auth import authenticate
+from django.contrib.contenttypes.models import ContentType
+from django.db import transaction
+from rest_framework import permissions, serializers, status, viewsets
+from rest_framework.decorators import action
+from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
+from rest_framework.response import Response
+from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
+from django.db import connection, DatabaseError
 
-try:
-    import torch
-    from PIL import Image
-    from torchvision import transforms
-except Exception:
-    torch = None
-from AI_Engine.models import AIModel, ImageResult
-from user.serializers import DoctorSerializer, DoctorWriteSerializer, AdminSerializer, AdminWriteSerializer
-from user.models import User
-
-# app imports
-from AI_Engine.models import ImageSample
-from AI_Engine.serializers import ImageSampleSerializer, ImageResultReadSerializer, ImageResultWriteSerializer
+from AI_Engine.models import ImageResult, ImageSample
+from AI_Engine.serializers import ImageResultReadSerializer, ImageResultWriteSerializer, ImageSampleSerializer
 from biopsy_result.models import BiopsyResult
 from biopsy_result.serializers import BiopsyResultSerializer
-from checkup.models import SkinCancerCheckup
+from checkup.models import CheckupStatus, SkinCancerCheckup
 from checkup.serializers import (
+    SkinCancerCheckupCreateSerializer,
+    SkinCancerCheckupListSerializer,
     SkinCancerCheckupSerializer,
-    SkinCancerCreateSerializer,
-    SkinCancerListSerializer,
 )
+from user.models import User
+from user.serializers import AdminSerializer, AdminWriteSerializer, DoctorSerializer, DoctorWriteSerializer
+
+
+class HealthCheckView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        status_report = {'database': 'ok'}
+        try:
+            connection.ensure_connection()
+        except DatabaseError as exc:
+            status_report['database'] = f'error: {exc}'
+
+        is_healthy = all(v == 'ok' for v in status_report.values())
+        http_status = status.HTTP_200_OK if is_healthy else status.HTTP_503_SERVICE_UNAVAILABLE
+        return Response({'status': 'ok' if is_healthy else 'degraded', **status_report}, status=http_status)
 
 
 
@@ -38,6 +46,7 @@ class DoctorViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.AllowAny]
     lookup_field = 'username'
     lookup_value_regex = '[^/]+'
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def get_serializer_class(self):
         if self.action in ['create', 'update', 'partial_update']:
@@ -79,9 +88,9 @@ class SkinCancerCheckupViewSet(viewsets.ModelViewSet):
 
     def get_serializer_class(self):
         if self.action == 'create':
-            return SkinCancerCreateSerializer
+            return SkinCancerCheckupCreateSerializer
         if self.action == 'list':
-            return SkinCancerListSerializer
+            return SkinCancerCheckupListSerializer
         # detail and other actions use full serializer
         return SkinCancerCheckupSerializer
 
@@ -95,16 +104,15 @@ class SkinCancerCheckupViewSet(viewsets.ModelViewSet):
             # Attach files directly from request.FILES for robust handling across clients.
             files = request.FILES.getlist('images')
             if files:
-                from django.contrib.contenttypes.models import ContentType
                 ct = ContentType.objects.get_for_model(instance)
-                for f in files:
-                    ImageSample.objects.create(content_type=ct, object_id=instance.pk, image=f)
+                for file_obj in files:
+                    ImageSample.objects.create(content_type=ct, object_id=instance.pk, image=file_obj)
 
         # Enqueue inference task for the new checkup
         from API.tasks import run_inference_for_checkup
 
         # Ensure status is PENDING (serializer may have set it)
-        instance.status = instance.status or 'PENDING'
+        instance.status = instance.status or CheckupStatus.PENDING
         instance.save(update_fields=['status'])
 
         try:
@@ -127,40 +135,6 @@ class SkinCancerCheckupViewSet(viewsets.ModelViewSet):
         headers = self.get_success_headers(out)
         return Response(out, status=status.HTTP_201_CREATED, headers=headers)
 
-    @action(detail=True, methods=['post'], url_path='infer', permission_classes=[permissions.AllowAny])
-    def infer(self, request, pk=None):
-        """Run inference for images attached to this checkup.
-
-        POST body may include `image_id` to run on a single ImageSample; otherwise all samples are processed.
-        """
-        checkup = self.get_object()
-        image_id = request.data.get('image_id') or request.query_params.get('image_id')
-        # Enqueue background Celery task to run inference.
-        # If `image_id` was provided, run per-sample inference; otherwise run for whole checkup.
-        from API.tasks import run_inference_for_checkup, run_inference_for_sample
-
-        if image_id:
-            # Validate the image belongs to this checkup
-            try:
-                sample = checkup.image_samples.get(pk=image_id)
-            except Exception:
-                return Response({'detail': 'ImageSample not found for this checkup.'}, status=status.HTTP_400_BAD_REQUEST)
-            try:
-                task = run_inference_for_sample.delay(sample.pk)
-            except Exception as e:
-                return Response({'detail': 'Failed to enqueue task', 'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-        else:
-            try:
-                task = run_inference_for_checkup.delay(checkup.pk)
-            except Exception as e:
-                return Response({'detail': 'Failed to enqueue task', 'error': str(e)}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-
-        # persist task id to the checkup
-        checkup.task_id = task.id
-        checkup.save(update_fields=['task_id'])
-
-        return Response({'task_id': task.id}, status=status.HTTP_202_ACCEPTED)
-
     @action(detail=True, methods=['get'], url_path='results', permission_classes=[permissions.AllowAny])
     def results(self, request, pk=None):
         """Return ImageResult rows for this checkup's images.
@@ -168,16 +142,16 @@ class SkinCancerCheckupViewSet(viewsets.ModelViewSet):
         Optional query param `wait` (seconds) will block/poll up to that many
         seconds for the checkup to reach `COMPLETED`. Default wait is 30s.
         """
-        import time
-        from django.utils import timezone
-
         checkup = self.get_object()
-        wait = int(request.query_params.get('wait', 30))
+        try:
+            wait = int(request.query_params.get('wait', 30))
+        except (TypeError, ValueError):
+            wait = 30
         interval = 1
         deadline = time.time() + max(0, wait)
 
         # If the checkup is still pending but the previously queued task has failed, re-enqueue inference.
-        if checkup.status == 'PENDING' and checkup.task_id:
+        if checkup.status == CheckupStatus.PENDING and checkup.task_id:
             try:
                 from celery.result import AsyncResult
                 from API.tasks import run_inference_for_checkup
@@ -186,14 +160,14 @@ class SkinCancerCheckupViewSet(viewsets.ModelViewSet):
                 if task_state in ('FAILURE', 'REVOKED'):
                     new_task = run_inference_for_checkup.delay(checkup.pk)
                     checkup.task_id = new_task.id
-                    checkup.status = 'PENDING'
+                    checkup.status = CheckupStatus.PENDING
                     checkup.save(update_fields=['task_id', 'status'])
             except Exception:
                 # If we cannot check or requeue, proceed with normal polling.
                 pass
 
         # Poll until completed or timeout
-        while checkup.status != 'COMPLETED' and time.time() < deadline:
+        while checkup.status != CheckupStatus.COMPLETED and time.time() < deadline:
             time.sleep(interval)
             checkup.refresh_from_db()
 
@@ -201,7 +175,7 @@ class SkinCancerCheckupViewSet(viewsets.ModelViewSet):
         results_qs = ImageResult.objects.filter(image_sample__content_type__model__icontains='skincancercheckup', image_sample__object_id=checkup.pk).select_related('image_sample')
         serializer = ImageResultReadSerializer(results_qs, many=True, context=self.get_serializer_context())
 
-        if checkup.status != 'COMPLETED':
+        if checkup.status != CheckupStatus.COMPLETED:
             return Response({'status': checkup.status, 'task_id': checkup.task_id}, status=status.HTTP_202_ACCEPTED)
 
         return Response({'status': checkup.status, 'task_id': checkup.task_id, 'results': serializer.data})

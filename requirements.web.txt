@@ -1,6 +1,7 @@
 Django==5.2.7
 djangorestframework
 djangorestframework-simplejwt
+django-cors-headers
 
 celery[redis]
 redis
@@ -8,7 +9,3 @@ redis
 Pillow
 requests
 numpy
-
-tensorflow==2.13.0
-
-opencv-python
