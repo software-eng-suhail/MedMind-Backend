@@ -21,6 +21,7 @@ class SkinCancerCheckupSerializer(serializers.ModelSerializer):
             'gender',
             'blood_type',
             'note',
+            'checkup_type',
             'status',
             'task_id',
             'started_at',
@@ -35,15 +36,15 @@ class SkinCancerCheckupSerializer(serializers.ModelSerializer):
             'diameter_mm',
             'evolution',
             'image_samples',
+            'image_count',
+            'result',
+            'final_confidence',
         ]
-        read_only_fields = ['id', 'created_at', 'image_samples']
+        read_only_fields = ['id', 'created_at', 'image_samples', 'checkup_type', 'image_count', 'result', 'final_confidence']
 
 
 class SkinCancerCheckupCreateSerializer(serializers.ModelSerializer):
-    # Accept doctor as a PK on write; return nested doctor on read via separate serializer
     doctor = serializers.PrimaryKeyRelatedField(queryset=User.objects.filter(role=User.Role.DOCTOR))
-    # Accept multiple image files when creating a checkup. Use a nested serializer
-    # so the DRF browsable API can render multiple file inputs.
     class ImageUploadSerializer(serializers.Serializer):
         image = serializers.ImageField()
 
@@ -57,8 +58,7 @@ class SkinCancerCheckupCreateSerializer(serializers.ModelSerializer):
             'gender',
             'blood_type',
             'note',
-            'status',
-            'task_id',
+            'checkup_type',
             'doctor',
             'lesion_size_mm',
             'lesion_location',
@@ -69,7 +69,7 @@ class SkinCancerCheckupCreateSerializer(serializers.ModelSerializer):
             'evolution',
             'images',
         ]
-        read_only_fields = ['id']
+        read_only_fields = ['id', 'checkup_type']
 
     def to_representation(self, instance):
         return SkinCancerCheckupSerializer(instance, context=self.context).data
@@ -88,25 +88,27 @@ class SkinCancerCheckupCreateSerializer(serializers.ModelSerializer):
             if images:
                 ct = ContentType.objects.get_for_model(instance)
                 for img in images:
-                    # nested serializer provides {'image': <InMemoryUploadedFile>} entries
                     image_file = img.get('image') if isinstance(img, dict) else img
                     ImageSample.objects.create(content_type=ct, object_id=instance.pk, image=image_file)
+            
+            instance.image_count = len(images)
+            instance.save(update_fields=['image_count'])
 
         return instance
 
 
 class SkinCancerCheckupListSerializer(serializers.ModelSerializer):
-    doctor = DoctorSerializer(read_only=True)
 
     class Meta:
         model = SkinCancerCheckup
         fields = [
             'id',
+            'age',
+            'gender',
             'created_at',
-            'status',
-            'task_id',
-            'doctor',
-            'lesion_location',
-            'lesion_size_mm',
+            'result',
+            'final_confidence',
+            'checkup_type',
+            'image_count',
         ]
         read_only_fields = fields

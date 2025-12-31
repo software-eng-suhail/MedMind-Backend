@@ -8,19 +8,28 @@ class CheckupStatus(models.TextChoices):
     FAILED = 'FAILED', 'Failed'
 
 
+class CheckupType(models.TextChoices):
+    SKIN_CANCER = 'SKIN_CANCER', 'Skin Cancer'
+    MRI_ALZHEIMER = 'MRI_ALZHEIMER', 'MRI Alzheimer'
+    DIABETES_RETINOPATHY = 'DIABETES_RETINOPATHY', 'Diabetes Retinopathy'
+
+
 class Checkup(models.Model):
     age = models.IntegerField()
     gender = models.CharField(max_length=10)
     blood_type = models.CharField(max_length=3)
     note = models.TextField(blank=True, null=True)
+    checkup_type = models.CharField(max_length=50, choices=CheckupType.choices, default=CheckupType.SKIN_CANCER)
     status = models.CharField(max_length=20, choices=CheckupStatus.choices, default=CheckupStatus.PENDING)
-    # Task tracking fields for asynchronous inference
     task_id = models.CharField(max_length=255, blank=True, null=True)
     started_at = models.DateTimeField(blank=True, null=True)
     completed_at = models.DateTimeField(blank=True, null=True)
     error_message = models.TextField(blank=True, null=True)
+    result = models.CharField(max_length=100, blank=True, null=True)
+    final_confidence = models.FloatField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     doctor = models.ForeignKey('user.User', on_delete=models.CASCADE, related_name='checkups')
+    image_count = models.IntegerField(default=0)
 
     class Meta:
         abstract = True

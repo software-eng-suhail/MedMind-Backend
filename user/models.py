@@ -6,10 +6,13 @@ from django.dispatch import receiver
 from django.core.validators import MinValueValidator
 
 class DoctorAccountStatus(models.TextChoices):
-	ACTIVE = 'ACTIVE', 'Active'
-	LOGGED_OUT = 'LOGGED_OUT', 'Logged Out'
+	VERIFIED = 'VERIFIED', 'Verified'
 	SUSPENDED = 'SUSPENDED', 'Suspended'
 	NOT_VERIFIED = 'NOT_VERIFIED', 'Not Verified'
+
+class EmailVerificationStatus(models.TextChoices):
+	PENDING = 'PENDING', 'Pending'
+	VERIFIED = 'VERIFIED', 'Verified'
 
 
 class User(AbstractUser):
@@ -52,7 +55,14 @@ class DoctorProfile(models.Model):
 		choices=DoctorAccountStatus.choices,
 		default=DoctorAccountStatus.NOT_VERIFIED,
 	)
+	email_verification_status = models.CharField(
+		max_length=20, 
+		choices=EmailVerificationStatus.choices,
+		default=EmailVerificationStatus.PENDING,
+	)
 	profile_picture = models.ImageField(upload_to='profiles/', blank=True, null=True)
+	license_image = models.ImageField(upload_to='licenses/')
+	logged_in = models.BooleanField(default=False)
 	changed_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name='changed_doctors')
 	created_at = models.DateTimeField(auto_now_add=True)
 
@@ -60,7 +70,6 @@ class DoctorProfile(models.Model):
 		return f"DoctorProfile({self.user.get_username()})"
 
 
-# When an AdminProfile is created, ensure the related User is marked as staff.
 @receiver(post_save, sender=AdminProfile)
 def _set_user_staff_on_adminprofile_create(sender, instance, created, **kwargs):
 	if not created:

@@ -6,11 +6,11 @@ url = f"{BASE}/api/skin-cancer-checkups/"
 
 # Use the exact payload from the original example
 data = {
-    "age": "45",
+    "age": "20",
     "gender": "male",
     "blood_type": "O+",
-    "note": "Patient complained of lesion",
-    "doctor": "9",
+    "note": "Patient complained of mole changes over the past 3 months.",
+    "doctor": "14",
     "lesion_size_mm": "12.5",
     "lesion_location": "left_arm",
     "asymmetry": "false",

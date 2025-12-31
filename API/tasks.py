@@ -110,6 +110,22 @@ def run_inference_for_checkup(self, checkup_id):
                 logger.exception('Inference failed for sample %s', sample.pk)
                 continue
 
+        results = ImageResult.objects.filter(
+            image_sample__content_type__model__icontains='skincancercheckup',
+            image_sample__object_id=checkup_id
+        )
+        
+        if results.exists():
+            confidences = [r.confidence for r in results if r.confidence is not None]
+            if confidences:
+                # Store highest confidence
+                checkup.final_confidence = max(confidences)
+                # Calculate average confidence
+                avg_confidence = sum(confidences) / len(confidences)
+                # Set result based on average
+                checkup.result = 'Malignant' if avg_confidence > 0.70 else 'Benign'
+                checkup.save(update_fields=['final_confidence', 'result'])
+
         checkup.status = CheckupStatus.COMPLETED
         checkup.completed_at = timezone.now()
         checkup.save(update_fields=['status', 'completed_at'])
