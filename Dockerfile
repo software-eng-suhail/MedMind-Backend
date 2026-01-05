@@ -12,7 +12,6 @@ RUN apt-get update \
 COPY requirements.web.txt ./
 COPY requirements.docker.txt ./
 
-# Increase pip timeout and retries to tolerate slow network during docker builds
 ENV PIP_DEFAULT_TIMEOUT=120
 RUN pip install -r requirements.web.txt -r requirements.docker.txt
 
@@ -22,4 +21,5 @@ ENV MODEL_DIR=/app/models
 
 EXPOSE 8000
 
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+# Use gunicorn for production-grade serving
+CMD ["gunicorn", "MedMind_Backend.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3", "--timeout", "60"]

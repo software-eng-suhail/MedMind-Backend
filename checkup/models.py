@@ -45,7 +45,6 @@ class SkinCancerCheckup(Checkup):
     color_variation = models.BooleanField()
     diameter_mm = models.FloatField()
     evolution = models.BooleanField()
-    # allow reverse lookup for image samples via generic relation
     image_samples = GenericRelation('AI_Engine.ImageSample', related_query_name='checkup')
 
     def __str__(self):

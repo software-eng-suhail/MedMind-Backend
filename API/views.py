@@ -53,6 +53,32 @@ class DoctorViewSet(viewsets.ModelViewSet):
             return DoctorWriteSerializer
         return DoctorSerializer
 
+    def get_filterset_fields(self):
+        if getattr(self, 'action', None) == 'checkups':
+            return {
+                'result': ['exact'],
+                'created_at': ['gte', 'lte'],
+                'age': ['gte', 'lte'],
+                'gender': ['iexact'],
+                'blood_type': ['exact'],
+            }
+        return None
+
+    def get_search_fields(self):
+        if getattr(self, 'action', None) == 'checkups':
+            return ['note', 'lesion_location', 'gender', 'blood_type']
+        return None
+
+    def get_ordering_fields(self):
+        if getattr(self, 'action', None) == 'checkups':
+            return ['created_at','confidence']
+        return None
+
+    def get_ordering(self):
+        if getattr(self, 'action', None) == 'checkups':
+            return ['-created_at']
+        return super().get_ordering()
+
     def perform_destroy(self, instance):
         try:
             instance.doctor_profile.delete()
@@ -64,20 +90,9 @@ class DoctorViewSet(viewsets.ModelViewSet):
     def checkups(self, request, *args, **kwargs):
         doctor = self.get_object()
         qs = SkinCancerCheckup.objects.filter(doctor=doctor).select_related('doctor')
-        
-        filter_backend = DjangoFilterBackend()
-        qs = filter_backend.filter_queryset(request, qs, self)
-        
-        search_backend = filters.SearchFilter()
-        search_backend.search_fields = ['note', 'lesion_location', 'gender', 'blood_type']
-        qs = search_backend.filter_queryset(request, qs, self)
-        
-        ordering_backend = filters.OrderingFilter()
-        ordering_backend.ordering_fields = ['id', 'created_at', 'started_at', 'completed_at', 'confidence']
-        ordering_backend.ordering = ['-created_at']
-        qs = ordering_backend.filter_queryset(request, qs, self)
-        
         qs = qs.annotate(confidence=Max('image_samples__result__confidence'))
+        # Default ordering by newest first; use main checkups endpoint for full filtering UI.
+        qs = qs.order_by('-created_at')
         
         serializer = SkinCancerCheckupListSerializer(qs, many=True, context=self.get_serializer_context())
         return Response(serializer.data)
@@ -107,6 +122,7 @@ class SkinCancerCheckupViewSet(viewsets.ModelViewSet):
     parser_classes = [MultiPartParser, FormParser, JSONParser]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = {
+        'doctor': ['exact'],
         'result': ['exact'],
         'created_at': ['gte', 'lte'],
         'gender': ['iexact'],
@@ -119,6 +135,9 @@ class SkinCancerCheckupViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         qs = super().get_queryset()
         qs = qs.annotate(confidence=Max('image_samples__result__confidence'))
+        user = getattr(self.request, 'user', None)
+        if getattr(user, 'is_doctor', lambda: False)():
+            qs = qs.filter(doctor=user)
         return qs
 
     def get_serializer_class(self):

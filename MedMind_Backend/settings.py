@@ -21,14 +21,26 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-tgh$8yv!sa7epy!@qi)3-%c@btrkw@_x#*z0_f0k+i$nbj&#@8')
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY') or os.environ.get('SECRET_KEY') or 'django-insecure-tgh$8yv!sa7epy!@qi)3-%c@btrkw@_x#*z0_f0k+i$nbj&#@8'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DJANGO_DEBUG', 'True').lower() in ['1', 'true', 'yes']
+DEBUG = (os.environ.get('DJANGO_DEBUG') or os.environ.get('DEBUG', 'True')).lower() in ['1', 'true', 'yes']
 
-ALLOWED_HOSTS_ENV = os.environ.get('DJANGO_ALLOWED_HOSTS')
-ALLOWED_HOSTS = [h.strip() for h in ALLOWED_HOSTS_ENV.split(',')] if ALLOWED_HOSTS_ENV else []
+# ALLOWED_HOSTS_ENV = os.environ.get('DJANGO_ALLOWED_HOSTS') or os.environ.get('ALLOWED_HOSTS')
+# if ALLOWED_HOSTS_ENV:
+#     ALLOWED_HOSTS = [h.strip() for h in ALLOWED_HOSTS_ENV.split(',') if h.strip()]
+# else:
+#     # Fallback hosts for deployed and local usage to avoid DisallowedHost
+#     ALLOWED_HOSTS = [
+#         'medmind-backend-web-production.up.railway.app',
+#         'localhost',
+#         '127.0.0.1',
+#         '*',
+#     ]
 
+ALLOWED_HOSTS = ['*']
+
+USE_X_FORWARDED_HOST = True
 
 # Application definition
 
@@ -151,12 +163,28 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # CORS/CSRF configuration
-ENV_CORS_ORIGINS = os.environ.get('CORS_ALLOWED_ORIGINS')
-CORS_ALLOWED_ORIGINS = [o.strip() for o in ENV_CORS_ORIGINS.split(',')] if ENV_CORS_ORIGINS else []
+# ENV_CORS_ORIGINS = os.environ.get('CORS_ALLOWED_ORIGINS')
+# CORS_ALLOWED_ORIGINS = [o.strip() for o in ENV_CORS_ORIGINS.split(',')] if ENV_CORS_ORIGINS else []
+CROS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_HEADERS = [
+    'authorization',
+    'content-type',
+    'x-csrftoken',
+]
+CORS_ALLOW_METHODS = [
+    'GET',
+    'POST',
+    'PUT',
+    'PATCH',
+    'DELETE',
+    'OPTIONS',
+]
 
 ENV_CSRF_TRUSTED = os.environ.get('CSRF_TRUSTED_ORIGINS')
-CSRF_TRUSTED_ORIGINS = [o.strip() for o in ENV_CSRF_TRUSTED.split(',')] if ENV_CSRF_TRUSTED else []
+CSRF_TRUSTED_ORIGINS = [o.strip() for o in ENV_CSRF_TRUSTED.split(',')] if ENV_CSRF_TRUSTED else [
+    'https://medmind-backend-web-production.up.railway.app',
+]
 SESSION_COOKIE_SAMESITE = 'Lax'
 CSRF_COOKIE_SAMESITE = 'Lax'
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
