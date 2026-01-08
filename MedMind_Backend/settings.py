@@ -165,8 +165,8 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # CORS/CSRF configuration
 # ENV_CORS_ORIGINS = os.environ.get('CORS_ALLOWED_ORIGINS')
 # CORS_ALLOWED_ORIGINS = [o.strip() for o in ENV_CORS_ORIGINS.split(',')] if ENV_CORS_ORIGINS else []
-CROS_ALLOW_ALL_ORIGINS = True
-CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = False
 CORS_ALLOW_HEADERS = [
     'authorization',
     'content-type',

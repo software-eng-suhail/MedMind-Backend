@@ -31,6 +31,8 @@ services:
     volumes:
       - ./:/app:rw
       - ./models:/app/models:ro
+    environment:
+      - MODEL_FILENAME=best_model.keras
     env_file:
       - .env
     depends_on:

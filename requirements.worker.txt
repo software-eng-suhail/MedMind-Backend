@@ -7,3 +7,4 @@ redis
 Pillow
 numpy
 django-cors-headers
+matplotlib
