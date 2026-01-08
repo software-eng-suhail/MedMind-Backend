@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     'biopsy_result',
     'API',
     'AI_Engine',
+    'billing',
     'rest_framework_simplejwt',
     'user',
 ]

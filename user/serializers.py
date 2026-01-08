@@ -21,6 +21,7 @@ class DoctorSerializer(serializers.ModelSerializer):
     email_verification_status = serializers.SerializerMethodField()
     profile_picture = serializers.SerializerMethodField()
     license_image = serializers.SerializerMethodField()
+    specialization = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -34,6 +35,7 @@ class DoctorSerializer(serializers.ModelSerializer):
             'email_verification_status',
             'profile_picture',
             'license_image',
+            'specialization',
             'created_at',
         ]
     read_only_fields = fields
@@ -78,20 +80,26 @@ class DoctorSerializer(serializers.ModelSerializer):
         except Exception:
             return None
 
+    def get_specialization(self, obj):
+        profile = getattr(obj, 'doctor_profile', None)
+        return getattr(profile, 'specialization', None) if profile else None
+
 
 class DoctorWriteSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True)
     profile_picture = serializers.ImageField(write_only=False, required=False, allow_null=True)
     license_image = serializers.ImageField(write_only=False, required=False, allow_null=True)
     name = serializers.CharField(required=False, allow_blank=True)
+    specialization = serializers.CharField(required=True)
 
     class Meta:
         model = User
-        fields = ['id', 'name', 'username', 'email', 'password', 'profile_picture', 'license_image']
+        fields = ['id', 'name', 'username', 'email', 'password', 'profile_picture', 'license_image', 'specialization']
 
     def create(self, validated_data):
         profile_picture = validated_data.pop('profile_picture', None)
         license_image = validated_data.pop('license_image', None)
+        specialization = validated_data.pop('specialization', None)
         password = validated_data.pop('password')
         
         validated_data['role'] = User.Role.DOCTOR
@@ -104,6 +112,8 @@ class DoctorWriteSerializer(serializers.ModelSerializer):
             profile.profile_picture = profile_picture
         if license_image is not None:
             profile.license_image = license_image
+        if specialization is not None:
+            profile.specialization = specialization
         profile.save()
         return user
 
@@ -111,6 +121,7 @@ class DoctorWriteSerializer(serializers.ModelSerializer):
         password = validated_data.pop('password', None)
         profile_picture = validated_data.pop('profile_picture', None)
         license_image = validated_data.pop('license_image', None)
+        specialization = validated_data.pop('specialization', None)
 
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
@@ -125,6 +136,8 @@ class DoctorWriteSerializer(serializers.ModelSerializer):
             profile.profile_picture = profile_picture
         if license_image is not None:
             profile.license_image = license_image
+        if specialization is not None:
+            profile.specialization = specialization
         profile.save()
 
         return instance

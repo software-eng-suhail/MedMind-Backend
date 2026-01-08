@@ -19,13 +19,12 @@ class User(AbstractUser):
 	class Role(models.TextChoices):
 		ADMIN = 'admin', 'Admin'
 		DOCTOR = 'doctor', 'Doctor'
-		PATIENT = 'patient', 'Patient'
 
 	# override email to ensure uniqueness for doctor registration flows
 	email = models.EmailField('email address', unique=True)
 	name = models.CharField(max_length=150)
 
-	role = models.CharField(max_length=20, choices=Role.choices, default=Role.PATIENT)
+	role = models.CharField(max_length=20, choices=Role.choices)
 	created_at = models.DateTimeField(auto_now_add=True)
 
 	def is_doctor(self):
@@ -62,6 +61,7 @@ class DoctorProfile(models.Model):
 	)
 	profile_picture = models.ImageField(upload_to='profiles/', blank=True, null=True)
 	license_image = models.ImageField(upload_to='licenses/')
+	specialization = models.CharField(max_length=255)
 	logged_in = models.BooleanField(default=False)
 	changed_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name='changed_doctors')
 	created_at = models.DateTimeField(auto_now_add=True)

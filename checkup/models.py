@@ -25,6 +25,7 @@ class Checkup(models.Model):
     started_at = models.DateTimeField(blank=True, null=True)
     completed_at = models.DateTimeField(blank=True, null=True)
     error_message = models.TextField(blank=True, null=True)
+    failure_refund = models.BooleanField(default=False)
     result = models.CharField(max_length=100, blank=True, null=True)
     final_confidence = models.FloatField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)

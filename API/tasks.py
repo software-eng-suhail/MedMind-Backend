@@ -1,5 +1,3 @@
-"""Celery tasks for running ML inference."""
-
 from __future__ import annotations
 
 import logging
@@ -35,10 +33,7 @@ def _tf():
     """Lazy-load TensorFlow to keep web container light."""
     global _TF
     if _TF is None:
-        try:
-            import tensorflow as tf  # type: ignore
-        except ImportError as exc:  # pragma: no cover - environment specific
-            raise ImportError("TensorFlow is required for inference; install it in the worker image.") from exc
+        import tensorflow as tf  # type: ignore
         _TF = tf
     return _TF
 
@@ -46,11 +41,8 @@ def _tf():
 def _maybe_enable_mixed_precision(tf):
     """Optionally enable mixed_float16 to match training policies."""
     if ENABLE_MIXED_PRECISION:
-        try:
-            tf.keras.mixed_precision.set_global_policy("mixed_float16")
-            logger.info("Enabled mixed_float16 policy for inference")
-        except Exception as e:  # pragma: no cover
-            logger.warning("Could not enable mixed precision: %s", e)
+        tf.keras.mixed_precision.set_global_policy("mixed_float16")
+        logger.info("Enabled mixed_float16 policy for inference")
 
 
 def _build_inference_model(tf):
@@ -86,91 +78,40 @@ def _load_model():
             raise FileNotFoundError(f"Model file not found at {MODEL_PATH}")
         tf = _tf()
         logger.info("Loading model from %s", MODEL_PATH)
-        # Detect artifact type and load appropriately
         if MODEL_PATH.is_dir():
-            # SavedModel directory expected
-            saved_pb = MODEL_PATH / "saved_model.pb"
-            if not saved_pb.exists():
-                raise ValueError(
-                    f"Directory at {MODEL_PATH} does not contain a SavedModel (missing saved_model.pb). "
-                    "Provide a TensorFlow SavedModel directory or a .keras/.h5 file."
-                )
-            # Try with patched Dense first
-            try:
-                _MODEL = _load_with_patched_dense(tf, MODEL_PATH)
-            except Exception:
-                _MODEL = tf.keras.models.load_model(str(MODEL_PATH), compile=False)
-        else:
-            ext = MODEL_PATH.suffix.lower()
-            if ext == ".keras":
-                # Try full model load first (allowing custom objects)
-                # 1) Try with TF-MOT quantize_scope if available
-                try:
-                    from tensorflow_model_optimization.quantization.keras import quantize_scope  # type: ignore
-                except Exception:  # pragma: no cover
-                    quantize_scope = None
+            _MODEL = tf.keras.models.load_model(str(MODEL_PATH), compile=False)
+            return _MODEL
 
-                if quantize_scope is not None:
-                    try:
-                        with quantize_scope():
-                            _MODEL = tf.keras.models.load_model(str(MODEL_PATH), compile=False, safe_mode=False)
-                    except Exception as e:
-                        logger.warning("TF-MOT quantize_scope load failed: %s", e)
-                        _MODEL = None
-                if _MODEL is None:
-                    try:
-                        _MODEL = _load_with_patched_dense(tf, MODEL_PATH)
-                    except Exception as e:
-                        logger.warning("Failed to load .keras model directly: %s", e)
-                    # Fallback: build known architecture and load weights-only
-                    _maybe_enable_mixed_precision(tf)
-                    model = _build_inference_model(tf)
-                    try:
-                        model.load_weights(str(MODEL_PATH))
-                    except Exception as we:
-                        raise ValueError(
-                            "Unable to load weights from the provided .keras file into the expected inference "
-                            "architecture. Please re-export weights-only from training using either \n"
-                            "  model.save_weights('best_model_weights.keras')  # Keras v3 weights format\n"
-                            "or\n"
-                            "  model.save_weights('best_model_weights.h5')    # HDF5 weights format\n"
-                            "and place the weights file under models/. Then set MODEL_FILENAME accordingly.\n"
-                            f"Original error: {we}"
-                        )
-                    _MODEL = model
-            elif ext in {".h5", ".hdf5"}:
-                # Try Keras 3 deserialization with safe_mode disabled to tolerate extra fields
-                # First, try with TF-MOT quantize_scope if available
+        ext = MODEL_PATH.suffix.lower()
+        if ext in {".keras", ".h5", ".hdf5"}:
+            loaders = [
+                lambda: _load_with_patched_dense(tf, MODEL_PATH),
+                lambda: tf.keras.models.load_model(str(MODEL_PATH), compile=False),
+            ]
+            for loader in loaders:
                 try:
-                    from tensorflow_model_optimization.quantization.keras import quantize_scope  # type: ignore
-                except Exception:  # pragma: no cover
-                    quantize_scope = None
-                loaded = None
-                if quantize_scope is not None:
-                    try:
-                        with quantize_scope():
-                            loaded = _load_with_patched_dense(tf, MODEL_PATH)
-                    except Exception as e:
-                        logger.warning("TF-MOT quantize_scope load failed (H5): %s", e)
-                if loaded is None:
-                    try:
-                        loaded = _load_with_patched_dense(tf, MODEL_PATH)
-                    except Exception as e:
-                        raise ValueError(
-                            "Failed to deserialize H5 model. If the model was quantization-aware trained, "
-                            "please either (a) strip quantization before saving: \n"
-                            "  from tensorflow_model_optimization.quantization.keras import strip_quantization\n"
-                            "  model_stripped = strip_quantization(model)\n"
-                            "  model_stripped.save('best_model.keras')\n"
-                            "or (b) export weights-only and let inference build the architecture: \n"
-                            "  model.save_weights('best_model_weights.h5')\n"
-                            f"Original error: {e}"
-                        )
-                _MODEL = loaded
-            else:
-                raise ValueError(
-                    f"Unsupported model artifact: {MODEL_PATH}. Expected SavedModel directory, `.keras`, or `.h5`/`.hdf5`."
-                )
+                    _MODEL = loader()
+                    break
+                except Exception:  # pragma: no cover - loader failure
+                    _MODEL = None
+            if _MODEL is None:
+                _maybe_enable_mixed_precision(tf)
+                model = _build_inference_model(tf)
+                try:
+                    model.load_weights(str(MODEL_PATH))
+                except Exception as err:
+                    raise ValueError("Unable to load model or weights from the provided artifact") from err
+                _MODEL = model
+            return _MODEL
+
+        # Weight-only artifacts (e.g., saved as plain weights without recognized extension)
+        _maybe_enable_mixed_precision(tf)
+        model = _build_inference_model(tf)
+        try:
+            model.load_weights(str(MODEL_PATH))
+        except Exception as err:
+            raise ValueError("Unsupported model artifact or failed to load weights") from err
+        _MODEL = model
     return _MODEL
 
 
@@ -343,5 +284,11 @@ def run_inference_for_checkup(self, checkup_id: int):
         checkup.status = CheckupStatus.FAILED
         checkup.error_message = str(exc)
         checkup.completed_at = timezone.now()
-        checkup.save(update_fields=["status", "error_message", "completed_at"])
+        # Refund once per checkup using failure_refund flag to avoid double refunds on retries
+        doctor_profile = getattr(checkup.doctor, "doctor_profile", None)
+        if doctor_profile and not getattr(checkup, "failure_refund", False):
+            doctor_profile.credits = doctor_profile.credits + 100
+            doctor_profile.save(update_fields=["credits"])
+            checkup.failure_refund = True
+        checkup.save(update_fields=["status", "error_message", "completed_at", "failure_refund"])
         raise
