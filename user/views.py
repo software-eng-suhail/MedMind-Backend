@@ -1,13 +1,16 @@
 import time
 
 from django.contrib.auth import authenticate
+from django.conf import settings
+from django.core.mail import send_mail
+from django.core import signing
 from rest_framework import permissions, serializers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from user.models import User
+from user.models import User, EmailVerificationStatus
 from user.serializers import (
 	AdminSerializer,
 	AdminWriteSerializer,
@@ -90,10 +93,23 @@ class AuthViewSet(viewsets.ViewSet):
 		serializer.is_valid(raise_exception=True)
 		user = serializer.save()
 
-		refresh = RefreshToken.for_user(user)
-		data = {
-			'doctor': DoctorSerializer(user, context={'request': request}).data,
-		}
+		# Automatically send verification email after signup
+		email = getattr(user, 'email', None)
+		if email:
+			try:
+				token = signing.dumps({'uid': user.pk}, salt='email-verify')
+				verify_url = request.build_absolute_uri(f"/api/auth/verify-email?token={token}")
+				subject = 'Verify your MedMind email'
+				body = (
+					f'Hello {user.username or user.email},\n\n'
+					f'Please verify your email by clicking the link below (valid for 24 hours):\n'
+					f'{verify_url}\n\n'
+					'If you did not request this, you can ignore this email.'
+				)
+				send_mail(subject, body, settings.DEFAULT_FROM_EMAIL or settings.EMAIL_HOST_USER, [email], fail_silently=True)
+			except Exception:
+				pass
+
 		return Response(status=status.HTTP_201_CREATED)
 
 	@action(detail=False, methods=['post'], url_path='login')
@@ -115,6 +131,12 @@ class AuthViewSet(viewsets.ViewSet):
 
 		if not user.is_doctor():
 			return Response({'detail': 'User is not a doctor'}, status=status.HTTP_403_FORBIDDEN)
+
+		if not user.is_verified_email():
+			return Response({'detail': 'Email not verified'}, status=status.HTTP_403_FORBIDDEN)
+
+		if not user.is_verified_doctor():
+			return Response({'detail': 'Doctor account not verified'}, status=status.HTTP_403_FORBIDDEN)
 
 		profile = getattr(user, 'doctor_profile', None)
 		if profile:
@@ -139,18 +161,65 @@ class AuthViewSet(viewsets.ViewSet):
 				profile.save(update_fields=['logged_in'])
 		return Response({'detail': 'Successfully logged out.'}, status=status.HTTP_200_OK)
 
+	@action(detail=False, methods=['post'], url_path='send-verification-email', permission_classes=[permissions.AllowAny])
+	def send_verification_email(self, request):
+		target_user = None
+
+		email_param = request.data.get('email')
+		if not email_param:
+			return Response({'detail': 'Email is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+		try:
+			target_user = User.objects.get(email=email_param, role=User.Role.DOCTOR)
+		except User.DoesNotExist:
+			return Response({'detail': 'Doctor not found for this email.'}, status=status.HTTP_404_NOT_FOUND)
+
+		email = getattr(target_user, 'email', None)
+
+		token = signing.dumps({'uid': target_user.pk}, salt='email-verify')
+		verify_url = request.build_absolute_uri(f"/api/auth/verify-email?token={token}")
+
+		subject = 'Verify your MedMind email'
+		body = (
+			f'Hello {target_user.username or target_user.email},\n\n'
+			f'Please verify your email by clicking the link below (valid for 24 hours):\n'
+			f'{verify_url}\n\n'
+			'If you did not request this, you can ignore this email.'
+		)
+
+		try:
+			send_mail(subject, body, settings.DEFAULT_FROM_EMAIL or settings.EMAIL_HOST_USER, [email], fail_silently=False)
+		except Exception as exc:
+			return Response({'detail': f'Failed to send email: {exc}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+		return Response({'detail': 'Verification email sent.'}, status=status.HTTP_200_OK)
+
 	@action(detail=False, methods=['post'], url_path='verify-email')
 	def verify_email(self, request):
-		user = request.user
+		token = request.data.get('token') or request.query_params.get('token')
+		if not token:
+			return Response({'detail': 'Missing token.'}, status=status.HTTP_400_BAD_REQUEST)
+
+		try:
+			data = signing.loads(token, max_age=24 * 60 * 60, salt='email-verify')
+		except Exception:
+			return Response({'detail': 'Invalid or expired token.'}, status=status.HTTP_400_BAD_REQUEST)
+
+		uid = data.get('uid')
+
+		try:
+			user = User.objects.get(pk=uid)
+		except User.DoesNotExist:
+			return Response({'detail': 'User not found.'}, status=status.HTTP_404_NOT_FOUND)
 
 		profile = getattr(user, 'doctor_profile', None)
-		if profile:
-			from user.models import EmailVerificationStatus
-			profile.email_verification_status = EmailVerificationStatus.VERIFIED
-			profile.save(update_fields=['email_verification_status'])
-			return Response({'detail': 'Email verified successfully.'}, status=status.HTTP_200_OK)
+		if not profile:
+			return Response({'detail': 'Doctor profile not found.'}, status=status.HTTP_400_BAD_REQUEST)
 
-		return Response({'detail': 'Doctor profile not found.'}, status=status.HTTP_400_BAD_REQUEST)
+		profile.email_verification_status = EmailVerificationStatus.VERIFIED
+		profile.save(update_fields=['email_verification_status'])
+
+		return Response({'detail': 'Email verified successfully.'}, status=status.HTTP_200_OK)
 
 	@action(detail=False, methods=['post'], url_path='verify-doctor', permission_classes=[permissions.IsAdminUser])
 	def verify_doctor(self, request):

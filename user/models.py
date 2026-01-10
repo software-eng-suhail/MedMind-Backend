@@ -33,6 +33,14 @@ class User(AbstractUser):
 	def is_admin(self):
 		return self.role == self.Role.ADMIN
 
+	def is_verified_doctor(self):
+		profile = getattr(self, 'doctor_profile', None)
+		return profile.account_status == DoctorAccountStatus.VERIFIED if profile else False
+
+	def is_verified_email(self):
+		profile = getattr(self, 'doctor_profile', None)
+		return profile.email_verification_status == EmailVerificationStatus.VERIFIED if profile else False
+
 	def __str__(self):
 		return self.get_username() or self.email or str(self.pk)
 
@@ -68,6 +76,13 @@ class DoctorProfile(models.Model):
 
 	def __str__(self):
 		return f"DoctorProfile({self.user.get_username()})"
+
+
+class DoctorProfileToVerify(DoctorProfile):
+	class Meta:
+		proxy = True
+		verbose_name = 'Accounts Verifying'
+		verbose_name_plural = 'Accounts Verifying'
 
 
 @receiver(post_save, sender=AdminProfile)
