@@ -12,3 +12,4 @@ numpy
 tensorflow==2.20.0
 
 opencv-python
+psycopg2-binary

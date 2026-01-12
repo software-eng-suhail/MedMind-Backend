@@ -25,7 +25,6 @@ class SkinCancerCheckupViewSet(viewsets.ModelViewSet):
 	parser_classes = [MultiPartParser, FormParser, JSONParser]
 	filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
 	filterset_fields = {
-		'doctor': ['exact'],
 		'result': ['exact'],
 		'created_at': ['gte', 'lte'],
 		'gender': ['iexact'],
@@ -48,14 +47,12 @@ class SkinCancerCheckupViewSet(viewsets.ModelViewSet):
 			return SkinCancerCheckupCreateSerializer
 		if self.action == 'list':
 			return SkinCancerCheckupListSerializer
-		# detail and other actions use full serializer
 		return SkinCancerCheckupSerializer
 
 	def create(self, request, *args, **kwargs):
 		data = request.data.copy()
 		user = getattr(request, "user", None)
-		if getattr(user, "is_doctor", lambda: False)():
-			data["doctor"] = user.pk
+		data["doctor"] = user.pk
 
 		with transaction.atomic():
 			serializer = self.get_serializer(data=data)
@@ -131,7 +128,6 @@ class SkinCancerCheckupViewSet(viewsets.ModelViewSet):
 					checkup.status = CheckupStatus.PENDING
 					checkup.save(update_fields=['task_id', 'status'])
 			except Exception:
-				# If we cannot check or requeue, proceed with normal polling.
 				pass
 
 		# Poll until completed or timeout

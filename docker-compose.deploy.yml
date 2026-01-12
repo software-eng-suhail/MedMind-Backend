@@ -16,6 +16,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
   redis:
     image: redis:7
     ports:
@@ -25,41 +26,27 @@ services:
 
   web:
     image: suhailmorisi/medmind-backend-web:latest
-    build:
-      context: .
-      dockerfile: Dockerfile
-
-
-    command: bash -c "python manage.py migrate --no-input && python manage.py runserver 0.0.0.0:8000"
-    volumes:
-      - ./:/app:rw
-      - ./models:/app/models:ro
     env_file:
       - .env
+    command: bash -c "python manage.py migrate --no-input && gunicorn MedMind_Backend.wsgi:application --bind 0.0.0.0:8000 --workers 3 --timeout 60"
     ports:
       - "8000:8000"
     depends_on:
-      - redis
       - postgres
+      - redis
     restart: unless-stopped
 
   worker:
     image: suhailmorisi/medmind-backend-worker:latest
-    build:
-      context: .
-      dockerfile: Dockerfile.worker
-    volumes:
-      - ./:/app:rw
-      - ./models:/app/models:ro
-    environment:
-      - MODEL_FILENAME=best_model.keras
     env_file:
       - .env
+    environment:
+      - MODEL_FILENAME=best_model.keras
     depends_on:
-      - redis
       - postgres
+      - redis
     restart: unless-stopped
 
 volumes:
-  redisdata:
   pgdata:
+  redisdata:

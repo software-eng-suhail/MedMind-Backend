@@ -25,7 +25,16 @@ class BiopsyResult(models.Model):
         constraints = [
             models.UniqueConstraint(fields=['content_type', 'object_id'], name='unique_biopsy_per_checkup')
         ]
+        verbose_name = 'All Result'
+        verbose_name_plural = 'All Results'
 
     def __str__(self):
         return f"BiopsyResult({self.pk}) Status={self.status}"
+
+
+class BiopsyResultPending(BiopsyResult):
+    class Meta:
+        proxy = True
+        verbose_name = 'Review And Auditing'
+        verbose_name_plural = 'Review And Auditing'
     

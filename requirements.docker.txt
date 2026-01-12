@@ -1,2 +1,4 @@
 gunicorn==21.2.0
 django-filter==25.2
+django-unfold
+psycopg2-binary

@@ -93,3 +93,18 @@ def _set_user_staff_on_adminprofile_create(sender, instance, created, **kwargs):
 	if user and not user.is_staff:
 		user.is_staff = True
 		user.save(update_fields=['is_staff'])
+
+
+# Proxy models to show "Admins" and "Doctors" in admin, filtered views of `User`
+class AdminUser(User):
+	class Meta:
+		proxy = True
+		verbose_name = 'Admin'
+		verbose_name_plural = 'Admins'
+
+
+class DoctorUser(User):
+	class Meta:
+		proxy = True
+		verbose_name = 'Doctor'
+		verbose_name_plural = 'Doctors'
