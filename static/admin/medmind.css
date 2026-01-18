@@ -1,0 +1,74 @@
+/* ===== Background depth (premium dark) ===== */
+html.dark body {
+  background: radial-gradient(1200px 600px at 20% 0%, rgba(56,189,248,.10), transparent 55%),
+              radial-gradient(900px 500px at 80% 10%, rgba(34,211,238,.08), transparent 60%),
+              #060b14;
+  color: #e5e7eb;
+}
+
+/* ===== Surfaces ===== */
+html.dark .unfold-header {
+  background: rgba(6,11,20,.85);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid #1e293b;
+}
+html.dark .unfold-card,
+html.dark .unfold-panel,
+html.dark .unfold-content-container {
+  background: #0b1220;
+  border: 1px solid #1e293b;
+  border-radius: 14px;
+}
+
+/* ===== Typography ===== */
+html.dark h1, html.dark h2, html.dark h3,
+html.dark .unfold-title {
+  color: #f8fafc;
+}
+html.dark .text-muted, html.dark .help, html.dark .unfold-help {
+  color: #94a3b8;
+}
+
+/* ===== Tables ===== */
+html.dark table { background: #0b1220; }
+html.dark th {
+  background: #0f172a;
+  color: #f8fafc;
+  border-bottom: 1px solid #1e293b;
+}
+html.dark td { border-bottom: 1px solid #1e293b; }
+
+/* ===== Links / focus (uses your "primary" accent) ===== */
+html.dark a { color: #67e8f9; }
+html.dark a:hover { color: #a5f3fc; }
+html.dark :focus-visible {
+  outline: 2px solid rgba(34,211,238,.55);
+  outline-offset: 2px;
+}
+
+/* ===== “Website-like” white CTA buttons ===== */
+html.dark .btn-primary,
+html.dark .unfold-btn-primary,
+html.dark button[type="submit"].btn-primary {
+  background: #ffffff !important;
+  color: #0b1220 !important;
+  border: 1px solid rgba(255,255,255,.15) !important;
+  border-radius: 9999px !important;
+  font-weight: 600;
+}
+html.dark .btn-primary:hover,
+html.dark .unfold-btn-primary:hover {
+  background: #e5e7eb !important;
+}
+
+/* ===== Inputs ===== */
+html.dark input, html.dark textarea, html.dark select {
+  background: #0a1020;
+  border: 1px solid #1e293b;
+  color: #e5e7eb;
+  border-radius: 12px;
+}
+html.dark input:focus, html.dark textarea:focus, html.dark select:focus {
+  border-color: rgba(34,211,238,.65);
+  box-shadow: 0 0 0 3px rgba(34,211,238,.15);
+}

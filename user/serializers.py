@@ -86,28 +86,46 @@ class DoctorSerializer(serializers.ModelSerializer):
 
 
 class DoctorWriteSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True, required=True)
-    profile_picture = serializers.ImageField(write_only=False, required=False, allow_null=True)
-    license_image = serializers.ImageField(write_only=False, required=False, allow_null=True)
+    password = serializers.CharField(write_only=True, required=False)
+    profile_picture = serializers.ImageField(source='doctor_profile.profile_picture', required=False, allow_null=True)
+    license_image = serializers.ImageField(source='doctor_profile.license_image', required=False, allow_null=True)
     name = serializers.CharField(required=False, allow_blank=True)
-    specialization = serializers.CharField(required=True)
+    specialization = serializers.CharField(source='doctor_profile.specialization', required=False)
+    profile_picture_clear = serializers.BooleanField(write_only=True, required=False, default=False)
 
     class Meta:
         model = User
-        fields = ['id', 'name', 'username', 'email', 'password', 'profile_picture', 'license_image', 'specialization']
+        fields = ['id', 'name', 'username', 'email', 'password', 'profile_picture', 'license_image', 'specialization', 'profile_picture_clear']
+
+    def validate(self, attrs):
+        # Require these fields on create, but allow partial updates without them.
+        if self.instance is None:
+            password = attrs.get('password')
+            doctor_profile = attrs.get('doctor_profile') or {}
+            specialization = doctor_profile.get('specialization')
+            if not password:
+                raise serializers.ValidationError({'password': 'This field is required.'})
+            if not specialization:
+                raise serializers.ValidationError({'specialization': 'This field is required.'})
+        return attrs
 
     def create(self, validated_data):
-        profile_picture = validated_data.pop('profile_picture', None)
-        license_image = validated_data.pop('license_image', None)
-        specialization = validated_data.pop('specialization', None)
-        password = validated_data.pop('password')
+        profile_picture_clear = validated_data.pop('profile_picture_clear', False)
+        doctor_profile_data = validated_data.pop('doctor_profile', {}) or {}
+        profile_picture = doctor_profile_data.get('profile_picture', None)
+        license_image = doctor_profile_data.get('license_image', None)
+        specialization = doctor_profile_data.get('specialization', None)
+        password = validated_data.pop('password', None)
         
         validated_data['role'] = User.Role.DOCTOR
         user = User.objects.create(**validated_data)
-        user.set_password(password)
+        if password:
+            user.set_password(password)
         user.save()
         
         profile, _ = DoctorProfile.objects.get_or_create(user=user)
+        if profile_picture_clear:
+            profile.profile_picture = None
         if profile_picture is not None:
             profile.profile_picture = profile_picture
         if license_image is not None:
@@ -119,9 +137,10 @@ class DoctorWriteSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         password = validated_data.pop('password', None)
-        profile_picture = validated_data.pop('profile_picture', None)
-        license_image = validated_data.pop('license_image', None)
-        specialization = validated_data.pop('specialization', None)
+        profile_picture_clear = validated_data.pop('profile_picture_clear', False)
+        doctor_profile_data = validated_data.pop('doctor_profile', {}) or {}
+        profile_picture = doctor_profile_data.get('profile_picture', None)
+        specialization = doctor_profile_data.get('specialization', None)
 
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
@@ -132,10 +151,10 @@ class DoctorWriteSerializer(serializers.ModelSerializer):
         instance.save()
 
         profile, _ = DoctorProfile.objects.get_or_create(user=instance)
-        if profile_picture is not None:
+        if profile_picture_clear:
+            profile.profile_picture = None
+        if 'profile_picture' in doctor_profile_data:
             profile.profile_picture = profile_picture
-        if license_image is not None:
-            profile.license_image = license_image
         if specialization is not None:
             profile.specialization = specialization
         profile.save()

@@ -1,5 +1,9 @@
+name: medmind
+
 services:
   postgres:
+    networks:
+      - appnet
     image: postgres:16
     env_file:
       - .env
@@ -7,8 +11,6 @@ services:
       - POSTGRES_DB=${POSTGRES_DB}
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-    ports:
-      - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -18,6 +20,8 @@ services:
       retries: 5
 
   redis:
+    networks:
+      - appnet
     image: redis:7
     ports:
       - "6379:6379"
@@ -28,13 +32,17 @@ services:
     image: suhailmorisi/medmind-backend-web:latest
     env_file:
       - .env
-    command: bash -c "python manage.py migrate --no-input && gunicorn MedMind_Backend.wsgi:application --bind 0.0.0.0:8000 --workers 3 --timeout 60"
+    command: bash -c "python manage.py migrate --no-input && python manage.py collectstatic --noinput && gunicorn MedMind_Backend.wsgi:application --bind 0.0.0.0:8000 --workers 3 --timeout 60"
+    volumes:
+      - ./media:/app/media
     ports:
       - "8000:8000"
     depends_on:
       - postgres
       - redis
     restart: unless-stopped
+    networks:
+      - appnet
 
   worker:
     image: suhailmorisi/medmind-backend-worker:latest
@@ -42,10 +50,18 @@ services:
       - .env
     environment:
       - MODEL_FILENAME=best_model.keras
+    volumes:
+      - ./media:/app/media
     depends_on:
       - postgres
       - redis
     restart: unless-stopped
+    networks:
+      - appnet
+
+networks:
+  appnet:
+    name: medmind_net
 
 volumes:
   pgdata:

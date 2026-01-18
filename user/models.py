@@ -37,6 +37,10 @@ class User(AbstractUser):
 		profile = getattr(self, 'doctor_profile', None)
 		return profile.account_status == DoctorAccountStatus.VERIFIED if profile else False
 
+	def is_suspended_doctor(self):
+		profile = getattr(self, 'doctor_profile', None)
+		return profile.account_status == DoctorAccountStatus.SUSPENDED if profile else False
+
 	def is_verified_email(self):
 		profile = getattr(self, 'doctor_profile', None)
 		return profile.email_verification_status == EmailVerificationStatus.VERIFIED if profile else False

@@ -13,8 +13,11 @@ SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY') or os.environ.get('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = (os.environ.get('DJANGO_DEBUG') or os.environ.get('DEBUG', 'True')).lower() in ['1', 'true', 'yes']
 
-ALLOWED_HOSTS_ENV = os.environ.get('DJANGO_ALLOWED_HOSTS') or os.environ.get('ALLOWED_HOSTS')
-ALLOWED_HOSTS = [h.strip() for h in ALLOWED_HOSTS_ENV.split(',') if h.strip()]
+ALLOWED_HOSTS_ENV = os.getenv("ALLOWED_HOSTS")
+if ALLOWED_HOSTS_ENV:
+    ALLOWED_HOSTS = [h.strip() for h in ALLOWED_HOSTS_ENV.split(",") if h.strip()]
+else:
+    ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
 
 
 USE_X_FORWARDED_HOST = True
@@ -43,6 +46,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -51,6 +55,8 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 ROOT_URLCONF = 'MedMind_Backend.urls'
 
@@ -140,9 +146,12 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+# Serve compressed static files with versioned names in production
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -203,13 +212,14 @@ CELERY_TASK_ALWAYS_EAGER = False
 # Minimal JWT cookie config
 REFRESH_COOKIE_NAME = os.environ.get('REFRESH_COOKIE_NAME', 'refresh_token')
 REFRESH_COOKIE_PATH = os.environ.get('REFRESH_COOKIE_PATH', '/api/auth/')
-REFRESH_COOKIE_SAMESITE = os.environ.get('REFRESH_COOKIE_SAMESITE', 'Lax')
+REFRESH_COOKIE_SAMESITE = os.environ.get('REFRESH_COOKIE_SAMESITE', 'None')
 # Use Secure cookies when not in DEBUG
 _cookie_secure_env = os.environ.get('REFRESH_COOKIE_SECURE')
 if _cookie_secure_env is None:
     REFRESH_COOKIE_SECURE = not DEBUG
 else:
     REFRESH_COOKIE_SECURE = _cookie_secure_env.lower() in ['1', 'true', 'yes']
+
 CELERY_TASK_EAGER_PROPAGATES = False
 CELERY_TIMEZONE = TIME_ZONE
 CELERY_TASK_MAX_RETRIES = int(os.environ.get('CELERY_TASK_MAX_RETRIES', '3'))
@@ -225,10 +235,45 @@ DEFAULT_FROM_EMAIL = 'MedMind'
 ACCOUNT_EMAIL_SUBJECT_PREFIX = ''
 
 # JWT lifetimes
+ACCESS_TOKEN_MINUTES = int(os.environ.get('ACCESS_TOKEN_LIFETIME_MINUTES', '15'))
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=ACCESS_TOKEN_MINUTES),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
 }
 
 # Password reset token timeout (seconds)
 PASSWORD_RESET_TIMEOUT = int(os.environ.get('PASSWORD_RESET_TIMEOUT', '3600'))
+
+# unfold admin config 
+
+from django.templatetags.static import static
+from django.urls import reverse_lazy
+from django.utils.translation import gettext_lazy as _
+
+
+UNFOLD = {
+    "SITE_TITLE": "MedMind Admin",
+    "SITE_HEADER": "MedMind",
+    "SITE_SUBHEADER": "Admin control panel",
+    "SITE_URL": "/",
+    "SITE_SYMBOL": "monitor_heart",
+
+    "COLORS": {
+        "primary": {
+            "50":  "#f8fafc",
+            "100": "#f1f5f9",
+            "200": "#e2e8f0",
+            "300": "#cbd5e1",
+            "400": "#94a3b8",
+            "500": "#64748b",  # accent
+            "600": "#475569",
+            "700": "#334155",
+            "800": "#1f2937",
+            "900": "#111827",
+        },
+    },
+
+    "SIDEBAR": {
+        "show_search": True,
+    },
+}

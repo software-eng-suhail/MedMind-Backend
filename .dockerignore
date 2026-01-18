@@ -3,6 +3,8 @@ __pycache__/
 env/
 venv/
 ML/
+media/
+example_images/
 db.sqlite3
 *.log
 .git/

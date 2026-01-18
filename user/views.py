@@ -17,8 +17,6 @@ from django.http import HttpResponse
 
 from user.models import User, EmailVerificationStatus
 from user.serializers import (
-	AdminSerializer,
-	AdminWriteSerializer,
 	DoctorSerializer,
 	DoctorWriteSerializer,
 	LoginSerializer,
@@ -30,34 +28,23 @@ class DoctorViewSet(viewsets.ModelViewSet):
 	permission_classes = [permissions.IsAuthenticated]
 	parser_classes = [MultiPartParser, FormParser, JSONParser]
 
+	def get_queryset(self):
+		qs = super().get_queryset()
+		user = getattr(self.request, 'user', None)
+		# Doctors can only see/update themselves
+		if getattr(user, 'is_doctor', lambda: False)():
+			qs = qs.filter(pk=user.pk)
+		return qs
+
 	def get_serializer_class(self):
 		if self.action in ['create', 'update', 'partial_update']:
 			return DoctorWriteSerializer
 		return DoctorSerializer
 
 	def perform_destroy(self, instance):
-		try:
-			instance.doctor_profile.delete()
-		except Exception:
-			pass
-		instance.delete()
-
-
-class AdminViewSet(viewsets.ModelViewSet):
-	queryset = User.objects.filter(role=User.Role.ADMIN).select_related('admin_profile')
-	permission_classes = [permissions.IsAuthenticated]
-
-	def get_serializer_class(self):
-		if self.action in ['create', 'update', 'partial_update']:
-			return AdminWriteSerializer
-		return AdminSerializer
-
-	def perform_destroy(self, instance):
-		try:
-			instance.admin_profile.delete()
-		except Exception:
-			pass
-		instance.delete()
+		"""Soft-delete: mark user inactive instead of removing the record."""
+		instance.is_active = False
+		instance.save(update_fields=['is_active'])
 
 
 class AuthViewSet(viewsets.ViewSet):
@@ -104,6 +91,13 @@ class AuthViewSet(viewsets.ViewSet):
 
 	@action(detail=False, methods=['post'], url_path='signup/doctor')
 	def signup_doctor(self, request):
+		# Block re-signup with a soft-deleted account
+		email = request.data.get('email')
+		if email:
+			deleted = User.objects.filter(email=email, is_active=False).first()
+			if deleted:
+				return Response({'detail': 'Deleted account.'}, status=status.HTTP_400_BAD_REQUEST)
+
 		serializer = self.get_serializer(data=request.data)
 		serializer.is_valid(raise_exception=True)
 		user = serializer.save()
@@ -144,11 +138,17 @@ class AuthViewSet(viewsets.ViewSet):
 			if user is None:
 				return Response({'detail': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
 
+		if not user.is_active:
+			return Response({'detail': 'Account is deleted'}, status=status.HTTP_403_FORBIDDEN)
+
 		if not user.is_doctor():
 			return Response({'detail': 'User is not a doctor'}, status=status.HTTP_403_FORBIDDEN)
 
 		if not user.is_verified_email():
 			return Response({'detail': 'Email not verified'}, status=status.HTTP_403_FORBIDDEN)
+
+		if user.is_suspended_doctor():
+			return Response({'detail': 'Doctor account is suspended'}, status=status.HTTP_403_FORBIDDEN)
 
 		if not user.is_verified_doctor():
 			return Response({'detail': 'Doctor account not verified'}, status=status.HTTP_403_FORBIDDEN)
@@ -200,9 +200,11 @@ class AuthViewSet(viewsets.ViewSet):
 	@action(detail=False, methods=['post'], url_path='refresh')
 	def refresh(self, request):
 		cookie_name = getattr(settings, 'REFRESH_COOKIE_NAME', 'refresh_token')
-		refresh_token = request.COOKIES.get(cookie_name)
+		refresh_token = request.COOKIES.get(cookie_name) or request.data.get('refresh') or request.data.get('refresh_token')
+		# Debug: log what we received (will show None if absent)
+		print(f"[DEBUG] refresh token from cookie: {request.COOKIES.get(cookie_name)!r}, from body: {request.data.get('refresh') or request.data.get('refresh_token')!r}")
 		if not refresh_token:
-			return Response({'detail': 'No refresh token.'}, status=status.HTTP_401_UNAUTHORIZED)
+			return Response({'detail': 'No refresh token provided.'}, status=status.HTTP_401_UNAUTHORIZED)
 		try:
 			ref = RefreshToken(refresh_token)
 			access = str(ref.access_token)

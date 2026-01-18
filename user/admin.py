@@ -1,5 +1,5 @@
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from django.contrib.auth.admin import UserAdmin as BaseUserAdmin, GroupAdmin as DjangoGroupAdmin
 from django.contrib.auth.models import Group
 from django.urls import path, reverse
 from django.utils.html import format_html
@@ -20,11 +20,18 @@ from .models import (
 	DoctorUser,
 )
 
-# Remove Groups section from admin dashboard
-# try:
-# 	admin.site.unregister(Group)
-# except admin.sites.NotRegistered:
-# 	pass
+# Register Groups using Unfold-styled admin
+try:
+	admin.site.unregister(Group)
+except admin.sites.NotRegistered:
+	pass
+
+
+class UnfoldGroupAdmin(DjangoGroupAdmin, ModelAdmin):
+	list_per_page = 25
+
+
+admin.site.register(Group, UnfoldGroupAdmin)
 
 
 class AdminProfileInline(StackedInline):
